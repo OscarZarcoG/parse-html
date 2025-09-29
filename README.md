@@ -236,13 +236,9 @@ python manage.py test PARSER
 - Escribir **docstrings** para funciones y clases
 - Incluir **tests** para nuevas características
 
-## 📄 Licencia
-
-Este proyecto está bajo la Licencia MIT. Ver el archivo [LICENSE](LICENSE) para más detalles.
-
 ## 👥 Autores
 
-- **Tu Nombre** - *Desarrollo inicial* - [OscarZarcoG](https://github.com/OscarZarcoG)
+- **Oscar Zarco G** - *Desarrollo inicial* - [OscarZarcoG](https://github.com/OscarZarcoG)
 
 ## 🆘 Soporte
 
