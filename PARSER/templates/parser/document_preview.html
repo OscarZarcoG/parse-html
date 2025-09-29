@@ -102,24 +102,45 @@
     
     .preview-container {
         border: 2px solid #e9ecef;
-        border-radius: 10px;
+        border-radius: 12px;
         overflow: hidden;
         margin-bottom: 20px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
     }
     
     .preview-toolbar {
-        background: #f8f9fa;
-        padding: 10px 15px;
-        border-bottom: 1px solid #e9ecef;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        padding: 12px 20px;
+        border-bottom: 1px solid #dee2e6;
         display: flex;
-        justify-content: between;
+        justify-content: space-between;
         align-items: center;
     }
     
     .preview-content {
-        padding: 20px;
+        padding: 30px;
         min-height: 400px;
-        background: white;
+        max-height: 600px;
+        overflow-y: auto;
+        background: #ffffff;
+    }
+
+    .preview-content::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .preview-content::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 4px;
+    }
+
+    .preview-content::-webkit-scrollbar-thumb {
+        background: #667eea;
+        border-radius: 4px;
+    }
+
+    .preview-content::-webkit-scrollbar-thumb:hover {
+        background: #5568d3;
     }
     
     .placeholder-item {
@@ -173,23 +194,35 @@
     .code-tabs {
         border-bottom: 2px solid #e9ecef;
         margin-bottom: 20px;
+        display: flex;
+        gap: 5px;
     }
     
     .code-tab {
         background: none;
         border: none;
-        padding: 10px 20px;
-        margin-right: 5px;
+        padding: 12px 24px;
         border-radius: 8px 8px 0 0;
         color: #6c757d;
-        font-weight: 500;
+        font-weight: 600;
         transition: all 0.3s ease;
         cursor: pointer;
+        position: relative;
     }
     
     .code-tab.active {
         background: #667eea;
         color: white;
+    }
+
+    .code-tab.active::after {
+        content: '';
+        position: absolute;
+        bottom: -2px;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: #667eea;
     }
     
     .code-tab:hover:not(.active) {
@@ -205,17 +238,97 @@
         display: block;
     }
     
-    .code-preview {
-        background: #f8f9fa;
-        border: 1px solid #e9ecef;
-        border-radius: 8px;
-        padding: 20px;
-        font-family: 'Courier New', monospace;
+    .code-preview-wrapper {
+        position: relative;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    .code-preview-header {
+        background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+        padding: 12px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #4a5568;
+    }
+
+    .code-preview-title {
+        color: #e2e8f0;
+        font-size: 0.85rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .code-preview-actions {
+        display: flex;
+        gap: 8px;
+    }
+
+    .copy-button {
+        background: rgba(102, 126, 234, 0.2);
+        border: 1px solid rgba(102, 126, 234, 0.3);
+        color: #667eea;
+        padding: 6px 16px;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .copy-button:hover {
+        background: rgba(102, 126, 234, 0.3);
+        border-color: rgba(102, 126, 234, 0.5);
+        transform: translateY(-1px);
+    }
+
+    .copy-button.copied {
+        background: rgba(72, 187, 120, 0.2);
+        border-color: rgba(72, 187, 120, 0.3);
+        color: #48bb78;
+    }
+
+    .copy-button i {
         font-size: 0.9rem;
-        max-height: 400px;
+    }
+    
+    .code-preview {
+        background: #1e1e1e;
+        color: #d4d4d4;
+        padding: 24px;
+        font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+        font-size: 0.9rem;
+        line-height: 1.6;
+        max-height: 500px;
         overflow-y: auto;
         white-space: pre-wrap;
         word-wrap: break-word;
+        margin: 0;
+    }
+
+    .code-preview::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+    }
+
+    .code-preview::-webkit-scrollbar-track {
+        background: #2d2d2d;
+    }
+
+    .code-preview::-webkit-scrollbar-thumb {
+        background: #4a4a4a;
+        border-radius: 5px;
+    }
+
+    .code-preview::-webkit-scrollbar-thumb:hover {
+        background: #5a5a5a;
     }
     
     .action-buttons {
@@ -236,6 +349,7 @@
     .btn-action:hover {
         transform: translateY(-2px);
         text-decoration: none;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     }
     
     .stats-grid {
@@ -271,6 +385,42 @@
         font-size: 0.9rem;
         margin-top: 5px;
     }
+
+    .toast-notification {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: #48bb78;
+        color: white;
+        padding: 16px 24px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        opacity: 0;
+        transform: translateY(20px);
+        transition: all 0.3s ease;
+        z-index: 9999;
+        pointer-events: none;
+    }
+
+    .toast-notification.show {
+        opacity: 1;
+        transform: translateY(0);
+        pointer-events: auto;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
 </style>
 {% endblock %}
 
@@ -278,6 +428,139 @@
 <div class="container">
     <!-- Información del Documento -->
     <div class="row">
+        <div class="col-lg-8">
+            <!-- Botones de Acción -->
+            <div class="action-buttons">
+                <a href="{% url 'parser:document_list' %}" class="btn btn-outline-primary btn-action">
+                    <i class="fas fa-arrow-left me-2"></i>Volver a Lista de Documentos
+                </a>
+                {% if template %}
+                <button class="btn btn-success btn-action" onclick="exportFiles()">
+                    <i class="fas fa-download me-2"></i>Exportar Archivos
+                </button>
+                {% endif %}
+            </div>
+
+            <!-- Vista Previa del Contenido -->
+            <div class="content-section">
+                <h4 class="section-title">
+                    <i class="fas fa-eye"></i>
+                    Vista Previa del Contenido
+                </h4>
+                
+                <div class="preview-container">
+                    <div class="preview-toolbar">
+                        <small class="text-muted">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Vista previa del contenido HTML parseado
+                        </small>
+                    </div>
+                    <div class="preview-content">
+                        {% if html_content %}
+                            {{ html_content|safe }}
+                        {% else %}
+                            <div class="text-center text-muted py-5">
+                                <i class="fas fa-file-alt fa-3x mb-3"></i>
+                                <p>No hay contenido HTML disponible para mostrar</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Código Fuente -->
+            <div class="content-section">
+                <h4 class="section-title">
+                    <i class="fas fa-file-code"></i>
+                    Código Fuente
+                </h4>
+                
+                <div class="code-tabs">
+                    {% if html_content %}
+                    <button class="code-tab active" onclick="showCodeTab(event, 'html')">
+                        <i class="fab fa-html5 me-1"></i>HTML
+                    </button>
+                    {% endif %}
+                    {% if css_content %}
+                    <button class="code-tab" onclick="showCodeTab(event, 'css')">
+                        <i class="fab fa-css3-alt me-1"></i>CSS
+                    </button>
+                    {% endif %}
+                    {% if js_content %}
+                    <button class="code-tab" onclick="showCodeTab(event, 'js')">
+                        <i class="fab fa-js-square me-1"></i>JavaScript
+                    </button>
+                    {% endif %}
+                </div>
+
+                {% if html_content %}
+                <div id="html-content" class="code-content active">
+                    <div class="code-preview-wrapper">
+                        <div class="code-preview-header">
+                            <div class="code-preview-title">
+                                <i class="fab fa-html5"></i>
+                                <span>index.html</span>
+                            </div>
+                            <div class="code-preview-actions">
+                                <button class="copy-button" onclick="copyCode('html-code')">
+                                    <i class="fas fa-copy"></i>
+                                    <span class="copy-text">Copiar</span>
+                                </button>
+                            </div>
+                        </div>
+                        <pre class="code-preview" id="html-code">{{ html_content }}</pre>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if css_content %}
+                <div id="css-content" class="code-content">
+                    <div class="code-preview-wrapper">
+                        <div class="code-preview-header">
+                            <div class="code-preview-title">
+                                <i class="fab fa-css3-alt"></i>
+                                <span>styles.css</span>
+                            </div>
+                            <div class="code-preview-actions">
+                                <button class="copy-button" onclick="copyCode('css-code')">
+                                    <i class="fas fa-copy"></i>
+                                    <span class="copy-text">Copiar</span>
+                                </button>
+                            </div>
+                        </div>
+                        <pre class="code-preview" id="css-code">{{ css_content }}</pre>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if js_content %}
+                <div id="js-content" class="code-content">
+                    <div class="code-preview-wrapper">
+                        <div class="code-preview-header">
+                            <div class="code-preview-title">
+                                <i class="fab fa-js-square"></i>
+                                <span>script.js</span>
+                            </div>
+                            <div class="code-preview-actions">
+                                <button class="copy-button" onclick="copyCode('js-code')">
+                                    <i class="fas fa-copy"></i>
+                                    <span class="copy-text">Copiar</span>
+                                </button>
+                            </div>
+                        </div>
+                        <pre class="code-preview" id="js-code">{{ js_content }}</pre>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if not html_content and not css_content and not js_content %}
+                <div class="text-center text-muted py-5">
+                    <i class="fas fa-code fa-3x mb-3"></i>
+                    <p>No hay código fuente disponible para mostrar</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
         <div class="col-lg-4">
             <div class="info-card">
                 <h5 class="mb-3">
@@ -322,98 +605,6 @@
                 {% endif %}
             </div>
         </div>
-
-        <div class="col-lg-8">
-            <!-- Botones de Acción -->
-            <div class="action-buttons">
-                <a href="{% url 'parser:document_list' %}" class="btn btn-outline-primary btn-action">
-                    <i class="fas fa-arrow-left me-2"></i>Volver a Lista de Documentos
-                </a>
-                {% if template %}
-                <button class="btn btn-success btn-action" onclick="exportFiles()">
-                    <i class="fas fa-download me-2"></i>Exportar Archivos
-                </button>
-                {% endif %}
-            </div>
-
-            <!-- Vista Previa del Contenido -->
-            <div class="content-section">
-                <h4 class="section-title">
-                    <i class="fas fa-code"></i>
-                    Vista Previa del Contenido
-                </h4>
-                
-                <div class="preview-container">
-                    <div class="preview-toolbar">
-                        <small class="text-muted">
-                            <i class="fas fa-info-circle me-1"></i>
-                            Esta es una vista previa del contenido HTML parseado
-                        </small>
-                    </div>
-                    <div class="preview-content">
-                        {% if html_content %}
-                            {{ html_content|safe }}
-                        {% else %}
-                            <div class="text-center text-muted py-5">
-                                <i class="fas fa-file-alt fa-3x mb-3"></i>
-                                <p>No hay contenido HTML disponible para mostrar</p>
-                            </div>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-
-            <!-- Código Fuente -->
-            <div class="content-section">
-                <h4 class="section-title">
-                    <i class="fas fa-file-code"></i>
-                    Código Fuente
-                </h4>
-                
-                <div class="code-tabs">
-                    {% if html_content %}
-                    <button class="code-tab active" onclick="showCodeTab('html')">
-                        <i class="fab fa-html5 me-1"></i>HTML
-                    </button>
-                    {% endif %}
-                    {% if css_content %}
-                    <button class="code-tab" onclick="showCodeTab('css')">
-                        <i class="fab fa-css3-alt me-1"></i>CSS
-                    </button>
-                    {% endif %}
-                    {% if js_content %}
-                    <button class="code-tab" onclick="showCodeTab('js')">
-                        <i class="fab fa-js-square me-1"></i>JavaScript
-                    </button>
-                    {% endif %}
-                </div>
-
-                {% if html_content %}
-                <div id="html-content" class="code-content active">
-                    <div class="code-preview">{{ html_content }}</div>
-                </div>
-                {% endif %}
-
-                {% if css_content %}
-                <div id="css-content" class="code-content">
-                    <div class="code-preview">{{ css_content }}</div>
-                </div>
-                {% endif %}
-
-                {% if js_content %}
-                <div id="js-content" class="code-content">
-                    <div class="code-preview">{{ js_content }}</div>
-                </div>
-                {% endif %}
-
-                {% if not html_content and not css_content and not js_content %}
-                <div class="text-center text-muted py-5">
-                    <i class="fas fa-code fa-3x mb-3"></i>
-                    <p>No hay código fuente disponible para mostrar</p>
-                </div>
-                {% endif %}
-            </div>
-        </div>
     </div>
 
     <!-- Placeholders Detectados -->
@@ -453,8 +644,14 @@
     {% endif %}
 </div>
 
+<!-- Toast Notification -->
+<div id="toast" class="toast-notification">
+    <i class="fas fa-check-circle"></i>
+    <span id="toast-message">Código copiado al portapapeles</span>
+</div>
+
 <script>
-function showCodeTab(tabName) {
+function showCodeTab(event, tabName) {
     // Ocultar todos los contenidos
     document.querySelectorAll('.code-content').forEach(content => {
         content.classList.remove('active');
@@ -472,7 +669,68 @@ function showCodeTab(tabName) {
     }
     
     // Activar la pestaña seleccionada
-    event.target.classList.add('active');
+    event.currentTarget.classList.add('active');
+}
+
+function copyCode(codeId) {
+    const codeElement = document.getElementById(codeId);
+    const button = event.currentTarget;
+    const copyText = button.querySelector('.copy-text');
+    const icon = button.querySelector('i');
+    
+    if (codeElement) {
+        const text = codeElement.textContent;
+        
+        navigator.clipboard.writeText(text).then(() => {
+            // Cambiar apariencia del botón
+            button.classList.add('copied');
+            icon.classList.remove('fa-copy');
+            icon.classList.add('fa-check');
+            copyText.textContent = 'Copiado';
+            
+            // Mostrar toast
+            showToast('Código copiado al portapapeles');
+            
+            // Restaurar botón después de 2 segundos
+            setTimeout(() => {
+                button.classList.remove('copied');
+                icon.classList.remove('fa-check');
+                icon.classList.add('fa-copy');
+                copyText.textContent = 'Copiar';
+            }, 2000);
+        }).catch(err => {
+            console.error('Error al copiar:', err);
+            showToast('Error al copiar el código', true);
+        });
+    }
+}
+
+function showToast(message, isError = false) {
+    const toast = document.getElementById('toast');
+    const toastMessage = document.getElementById('toast-message');
+    const icon = toast.querySelector('i');
+    
+    // Configurar mensaje
+    toastMessage.textContent = message;
+    
+    // Cambiar estilo según tipo
+    if (isError) {
+        toast.style.background = '#f56565';
+        icon.classList.remove('fa-check-circle');
+        icon.classList.add('fa-exclamation-circle');
+    } else {
+        toast.style.background = '#48bb78';
+        icon.classList.remove('fa-exclamation-circle');
+        icon.classList.add('fa-check-circle');
+    }
+    
+    // Mostrar toast
+    toast.classList.add('show');
+    
+    // Ocultar después de 3 segundos
+    setTimeout(() => {
+        toast.classList.remove('show');
+    }, 3000);
 }
 
 function exportFiles() {
@@ -481,9 +739,8 @@ function exportFiles() {
     }
 }
 
-// Filtro personalizado para obtener valores del diccionario
 document.addEventListener('DOMContentLoaded', function() {
-    // Agregar funcionalidad adicional si es necesaria
+    // Funcionalidad adicional si es necesaria
 });
 </script>
 {% endblock %}

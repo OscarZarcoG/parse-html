@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evaluación de Estadía</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 11pt;
+            line-height: 1.5;
+            padding: 40px 60px;
+            background: white;
+            color: black;
+            position: relative;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            position: relative;
+            padding-bottom: 60px;
+            /* Espacio para el pie de página */
+        }
+
+        h1 {
+            font-size: 14pt;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        h2 {
+            font-size: 12pt;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .programa-educativo {
+            margin-bottom: 10px;
+        }
+
+        .programa-educativo strong {
+            font-weight: normal;
+        }
+
+        .programa-educativo .titulo {
+            font-weight: bold;
+        }
+
+        .fecha-container {
+            margin-bottom: 20px;
+            text-align: end;
+        }
+
+        .info-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        .info-table td {
+            border: 1px solid black;
+            padding: 8px 10px;
+            vertical-align: middle;
+        }
+
+        .info-table .label {
+            font-weight: normal;
+            width: 50%;
+        }
+
+        .info-table .value {
+            font-weight: normal;
+            width: 50%;
+        }
+
+        .info-table .full-width {
+            colspan: 2;
+        }
+
+        .evaluation-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        .evaluation-table th,
+        .evaluation-table td {
+            border: 1px solid black;
+            padding: 6px 8px;
+            text-align: left;
+        }
+
+        .evaluation-table th {
+            font-weight: bold;
+            text-align: center;
+            background-color: #f0f0f0;
+        }
+
+        .evaluation-table .aspect-column {
+            width: 60%;
+        }
+
+        .evaluation-table .calification-column {
+            width: 20%;
+            text-align: center;
+        }
+
+        .evaluation-table .promedio-row {
+            font-weight: bold;
+        }
+
+        .evaluation-table .promedio-global-row {
+            font-weight: bold;
+            background-color: #f0f0f0;
+        }
+
+        .nota {
+            font-weight: bold;
+            margin-bottom: 20px;
+            font-size: 11pt;
+        }
+
+        .observaciones-container {
+            margin-bottom: 30px;
+        }
+
+        .observaciones-box {
+            width: 100%;
+            border: 1px solid black;
+            min-height: 80px;
+            padding: 10px;
+        }
+
+        .observaciones-label {
+            margin-bottom: 5px;
+        }
+
+        .firmas-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 40px;
+        }
+
+        .firmas-table td {
+            border: 1px solid black;
+            padding: 15px;
+            text-align: center;
+            vertical-align: bottom;
+            height: 80px;
+        }
+
+        .firmas-table .firma-cell {
+            width: 40%;
+        }
+
+        .firmas-table .espacio-cell {
+            width: 20%;
+            border: none;
+        }
+
+        .firma-nombre {
+            margin-top: 40px;
+            border-top: 1px solid black;
+            padding-top: 5px;
+            font-weight: normal;
+        }
+
+        .placeholder {
+            color: #ff0000;
+            font-weight: normal;
+        }
+
+        .universidad {
+            font-size: 14pt;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .transparent {
+            color: rgba(0, 0, 0, 0.5);
+        }
+
+        .pie-pagina {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-between;
+            font-size: 10pt;
+        }
+
+        .no-border {
+            border: none !important;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1 class="universidad transparent">UNIVERSIDAD TECNOLÓGICA DEL VALLE DE TOLUCA</h1>
+        <h1>EVALUACIÓN DE LA ESTADÍA</h1>
+
+        <h2>Cuatrimestre <span class="placeholder">{{cuatrimestre}}</span></h2>
+
+        <div class="programa-educativo">
+            Programa educativo: <span class="placeholder">{{programa_educativo}}</span>
+        </div>
+
+        <div class="fecha-container">
+            Fecha: <span class="placeholder">{{fecha}}</span>
+        </div>
+
+        <table class="info-table">
+            <tr>
+               <td class="value no-border"></span></td>
+                <td class="value">No. de evaluación: <span class="placeholder">{{no_evaluacion}}</span></td>
+            </tr>
+            <tr>
+                <td class="label">Estudiante: <span class="placeholder">{{estudiante}}</span></td>
+                <td class="value">No. de Matrícula: <span class="placeholder">{{no_matricula}}</span></td>
+            </tr>
+            <tr>
+                <td class="label" colspan="2">Asesor académico: <span class="placeholder">{{asesor_academico}}</span></td>
+            </tr>
+            <tr>
+                <td class="label">Asesor externo: <span class="placeholder">{{asesor_externo}}</span></td>
+                <td class="value">Puesto: <span class="placeholder">{{puesto}}</span></td>
+            </tr>
+            <tr>
+                <td colspan="2" class="label">Organismo social, público o privado: <span class="placeholder">{{organismo}}</span></td>
+            </tr>
+            <tr>
+                <td colspan="2" class="label">Nombre del proyecto: <span class="placeholder">{{nombre_proyecto}}</span>
+                </td>
+            </tr>
+        </table>                
+
+        <table class="evaluation-table">
+            <thead>
+                <tr>
+                    <th rowspan="2" class="aspect-column">ASPECTOS A EVALUAR</th>
+                    <th colspan="2">CALIFICACIÓN</th>
+                </tr>
+                <tr>
+                    <th class="calification-column">ASESOR EXTERNO</th>
+                    <th class="calification-column">ASESOR ACADÉMICO</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>1.- Facilidad para el trabajo en equipo.</td>
+                    <td class="calification-column"><span class="placeholder">{{cal_externo_1}}</span></td>
+                    <td class="calification-column no-border"></td>
+                </tr>
+                <tr>
+                    <td>2.- Cumplimiento a las normas generales y de seguridad.</td>
+                    <td class="calification-column"><span class="placeholder">{{cal_externo_2}}</span></td>
+                    <td class="calification-column no-border"></td>
+                </tr>
+                <tr>
+                    <td>3.- Desarrollo de propuestas de mejora en la organización.</td>
+                    <td class="calification-column"><span class="placeholder">{{cal_externo_3}}</span></td>
+                    <td class="calification-column no-border"></td>
+                </tr>
+                <tr>
+                    <td>4.- Puntualidad.</td>
+                    <td class="calification-column"><span class="placeholder">{{cal_externo_4}}</span></td>
+                    <td class="calification-column"><span class="placeholder">{{cal_academico_4}}</span></td>
+                </tr>
+                <tr>
+                    <td>5.- Asistencia.</td>
+                    <td class="calification-column"><span class="placeholder">{{cal_externo_5}}</span></td>
+                    <td class="calification-column"><span class="placeholder">{{cal_academico_5}}</span></td>
+                </tr>
+                <tr>
+                    <td>6.- Actitud hacia el trabajo asignado.</td>
+                    <td class="calification-column"><span class="placeholder">{{cal_externo_6}}</span></td>
+                    <td class="calification-column"><span class="placeholder">{{cal_academico_6}}</span></td>
+                </tr>
+                <tr>
+                    <td>7.- Capacidad de comunicación oral.</td>
+                    <td class="calification-column"><span class="placeholder">{{cal_externo_7}}</span></td>
+                    <td class="calification-column"><span class="placeholder">{{cal_academico_7}}</span></td>
+                </tr>
+                <tr>
+                    <td>8.- Capacidad de comunicación escrita.</td>
+                    <td class="calification-column"><span class="placeholder">{{cal_externo_8}}</span></td>
+                    <td class="calification-column"><span class="placeholder">{{cal_academico_8}}</span></td>
+                </tr>
+                <tr>
+                    <td>9.- Conocimientos técnicos aplicados.</td>
+                    <td class="calification-column"><span class="placeholder">{{cal_externo_9}}</span></td>
+                    <td class="calification-column"><span class="placeholder">{{cal_academico_9}}</span></td>
+                </tr>
+                <tr>
+                    <td>10.- Evaluación del avance del proyecto y/o memoria.</td>
+                    <td class="calification-column"><span class="placeholder">{{cal_externo_10}}</span></td>
+                    <td class="calification-column"><span class="placeholder">{{cal_academico_10}}</span></td>
+                </tr>
+                <tr class="promedio-row">
+                    <td><strong>Promedio:</strong></td>
+                    <td class="calification-column"><span class="placeholder">{{promedio_externo}}</span></td>
+                    <td class="calification-column"><span class="placeholder">{{promedio_academico}}</span></td>
+                </tr>
+                <tr class="promedio-global-row">
+                    <td><strong>Promedio global:</strong></td>
+                    <td colspan="2" class="calification-column"><span class="placeholder">{{promedio_global}}</span>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="nota">
+            NOTA: La calificación mínima aprobatoria es de 8.0 (ocho).
+        </div>
+
+        <div class="observaciones-container">
+            <div class="observaciones-label">Observaciones:</div>
+            <div class="observaciones-box">
+                <span class="placeholder">{{observaciones}}</span>
+            </div>
+        </div>
+
+        <table class="firmas-table">
+            <tr>
+                <td class="firma-cell">
+                    Asesor Externo<br>
+                    <span class="placeholder">{{firma_asesor_externo}}</span>
+                    <div class="firma-nombre">Nombre y firma</div>
+                </td>
+                <td class="espacio-cell"></td>
+                <td class="firma-cell">
+                    Asesor Académico<br>
+                    <span class="placeholder">{{firma_asesor_academico}}</span>
+                    <div class="firma-nombre">Nombre y firma</div>
+                </td>
+            </tr>
+        </table>
+        <div class="pie-pagina">
+            <span class="transparent">Revisón: <span class="placeholder transparent">{{num_revision}}</span></span>
+            <span class="placeholder transparent">{{nombre_doc}}</span>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
