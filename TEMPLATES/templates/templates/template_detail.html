@@ -1,0 +1,267 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ template.name }} - Detalle de Plantilla{% endblock %}
+
+{% block extra_css %}
+<style>
+    .template-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem 0;
+        margin-bottom: 2rem;
+    }
+    
+    .template-stats {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .stat-item {
+        text-align: center;
+        padding: 1rem;
+    }
+    
+    .stat-number {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #007bff;
+    }
+    
+    .stat-label {
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+    
+    .action-buttons {
+        margin-bottom: 2rem;
+    }
+    
+    .action-buttons .btn {
+        margin-right: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .content-section {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .version-item {
+        border-left: 3px solid #007bff;
+        padding-left: 1rem;
+        margin-bottom: 1rem;
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 5px;
+    }
+    
+    .placeholder-item {
+        background: #e9ecef;
+        padding: 1rem;
+        border-radius: 5px;
+        margin-bottom: 0.5rem;
+    }
+    
+    .branch-item {
+        background: #fff3cd;
+        padding: 1rem;
+        border-radius: 5px;
+        margin-bottom: 0.5rem;
+        border-left: 3px solid #ffc107;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="template-header">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-8">
+                <h1>{{ template.name }}</h1>
+                <p class="lead">{{ template.description|default:"Sin descripción" }}</p>
+                <div class="d-flex align-items-center">
+                    <span class="badge badge-{% if template.status == 'published' %}success{% elif template.status == 'draft' %}warning{% else %}secondary{% endif %} mr-2">
+                        {{ template.get_status_display }}
+                    </span>
+                    {% if template.category %}
+                        <span class="badge badge-info mr-2">{{ template.category.name }}</span>
+                    {% endif %}
+                    <small class="text-light">Creado el {{ template.created_at|date:"d/m/Y H:i" }}</small>
+                </div>
+            </div>
+            <div class="col-md-4 text-right">
+                <div class="action-buttons">
+                    <a href="{% url 'templates:template_editor' template.id %}" class="btn btn-primary">
+                        <i class="fas fa-edit"></i> Editar
+                    </a>
+                    <a href="{% url 'templates:preview_template' template.id %}" class="btn btn-info" target="_blank">
+                        <i class="fas fa-eye"></i> Vista Previa
+                    </a>
+                    <a href="{% url 'templates:export_template' template.id %}" class="btn btn-success">
+                        <i class="fas fa-download"></i> Exportar
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Estadísticas -->
+    <div class="template-stats">
+        <div class="row">
+            <div class="col-md-3">
+                <div class="stat-item">
+                    <div class="stat-number">{{ stats.total_versions }}</div>
+                    <div class="stat-label">Versiones</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-item">
+                    <div class="stat-number">{{ stats.total_branches }}</div>
+                    <div class="stat-label">Ramas</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-item">
+                    <div class="stat-number">{{ stats.total_placeholders }}</div>
+                    <div class="stat-label">Placeholders</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-item">
+                    <div class="stat-number">{{ stats.current_version }}</div>
+                    <div class="stat-label">Versión Actual</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Versiones Recientes -->
+        <div class="col-md-6">
+            <div class="content-section">
+                <h3><i class="fas fa-history"></i> Versiones Recientes</h3>
+                {% if recent_versions %}
+                    {% for version in recent_versions %}
+                        <div class="version-item">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <strong>Versión {{ version.version_number }}</strong>
+                                    <p class="mb-1">{{ version.commit_message }}</p>
+                                    <small class="text-muted">
+                                        Por {{ version.author.username }} - {{ version.created_at|date:"d/m/Y H:i" }}
+                                    </small>
+                                </div>
+                                <span class="badge badge-{% if version.status == 'committed' %}success{% else %}warning{% endif %}">
+                                    {{ version.get_status_display }}
+                                </span>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted">No hay versiones disponibles.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Placeholders -->
+        <div class="col-md-6">
+            <div class="content-section">
+                <h3><i class="fas fa-tags"></i> Placeholders</h3>
+                {% if placeholders %}
+                    {% for placeholder in placeholders %}
+                        <div class="placeholder-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>{{ placeholder.name }}</strong>
+                                    <span class="badge badge-secondary ml-2">{{ placeholder.get_placeholder_type_display }}</span>
+                                    {% if placeholder.is_required %}
+                                        <span class="badge badge-danger ml-1">Requerido</span>
+                                    {% endif %}
+                                    <p class="mb-0 mt-1 text-muted">{{ placeholder.description|default:"Sin descripción" }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted">No hay placeholders definidos.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Ramas -->
+    <div class="row">
+        <div class="col-12">
+            <div class="content-section">
+                <h3><i class="fas fa-code-branch"></i> Ramas</h3>
+                {% if branches %}
+                    <div class="row">
+                        {% for branch in branches %}
+                            <div class="col-md-6">
+                                <div class="branch-item">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <strong>{{ branch.name }}</strong>
+                                            {% if branch.is_main %}
+                                                <span class="badge badge-primary ml-2">Principal</span>
+                                            {% endif %}
+                                            <p class="mb-0 mt-1">{{ branch.description|default:"Sin descripción" }}</p>
+                                            <small class="text-muted">
+                                                Creado por {{ branch.created_by.username }} - {{ branch.created_at|date:"d/m/Y" }}
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted">No hay ramas disponibles.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Botones de Acción Adicionales -->
+    <div class="row">
+        <div class="col-12">
+            <div class="content-section">
+                <h3><i class="fas fa-cogs"></i> Acciones</h3>
+                <div class="action-buttons">
+                    <a href="{% url 'templates:template_list' %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Volver a la Lista
+                    </a>
+                    <button type="button" class="btn btn-warning" onclick="duplicateTemplate()">
+                        <i class="fas fa-copy"></i> Duplicar Plantilla
+                    </button>
+                    <button type="button" class="btn btn-danger" onclick="deleteTemplate()">
+                        <i class="fas fa-trash"></i> Eliminar Plantilla
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function duplicateTemplate() {
+    if (confirm('¿Estás seguro de que quieres duplicar esta plantilla?')) {
+        window.location.href = "{% url 'templates:duplicate_template' template.id %}";
+    }
+}
+
+function deleteTemplate() {
+    if (confirm('¿Estás seguro de que quieres eliminar esta plantilla? Esta acción no se puede deshacer.')) {
+        window.location.href = "{% url 'templates:delete_template' template.id %}";
+    }
+}
+</script>
+{% endblock %}

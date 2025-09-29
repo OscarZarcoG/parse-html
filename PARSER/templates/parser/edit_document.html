@@ -1,0 +1,228 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Editar Documento - ParseoDocs{% endblock %}
+
+{% block extra_css %}
+<style>
+    .edit-form-container {
+        max-width: 600px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        padding: 2rem;
+    }
+    
+    .form-header {
+        text-align: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #f8f9fa;
+    }
+    
+    .form-header h1 {
+        color: #2c3e50;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+    
+    .form-header p {
+        color: #6c757d;
+        margin: 0;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-label {
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+    
+    .form-control {
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .form-control:focus {
+        border-color: #007bff;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+    
+    .btn-group {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        margin-top: 2rem;
+    }
+    
+    .btn {
+        padding: 0.75rem 2rem;
+        border-radius: 8px;
+        font-weight: 600;
+        text-decoration: none;
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #007bff, #0056b3);
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        background: linear-gradient(135deg, #0056b3, #004085);
+        transform: translateY(-2px);
+    }
+    
+    .btn-secondary {
+        background: #6c757d;
+        color: white;
+    }
+    
+    .btn-secondary:hover {
+        background: #545b62;
+        transform: translateY(-2px);
+    }
+    
+    .document-info {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .document-info h6 {
+        color: #495057;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+    }
+    
+    .document-info p {
+        margin: 0.25rem 0;
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="edit-form-container">
+        <div class="form-header">
+            <h1><i class="fas fa-edit me-2"></i>Editar Documento</h1>
+            <p>Modifica la información de tu documento</p>
+        </div>
+        
+        <div class="document-info">
+            <h6><i class="fas fa-info-circle me-2"></i>Información del Documento</h6>
+            <p><strong>Archivo original:</strong> {{ document.original_filename }}</p>
+            <p><strong>Tipo:</strong> {{ document.get_document_type_display }}</p>
+            <p><strong>Estado:</strong> 
+                {% if document.status == 'processed' %}
+                    <span class="badge bg-success">Procesado</span>
+                {% elif document.status == 'processing' %}
+                    <span class="badge bg-warning">Procesando</span>
+                {% elif document.status == 'error' %}
+                    <span class="badge bg-danger">Error</span>
+                {% else %}
+                    <span class="badge bg-secondary">{{ document.get_status_display }}</span>
+                {% endif %}
+            </p>
+            <p><strong>Subido:</strong> {{ document.uploaded_at|date:"d/m/Y H:i" }}</p>
+        </div>
+        
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="name" class="form-label">
+                    <i class="fas fa-file-alt me-2"></i>Nombre del Documento
+                </label>
+                <input type="text" 
+                       class="form-control" 
+                       id="name" 
+                       name="name" 
+                       value="{{ document.name }}" 
+                       required
+                       maxlength="255"
+                       placeholder="Ingresa el nombre del documento">
+                <small class="form-text text-muted">
+                    Este nombre se mostrará en la lista de documentos
+                </small>
+            </div>
+            
+            <div class="btn-group">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-2"></i>Guardar Cambios
+                </button>
+                <a href="{% url 'parser:document_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-times me-2"></i>Cancelar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-focus en el campo de nombre
+    document.getElementById('name').focus();
+    
+    // Validación del formulario
+    const form = document.querySelector('form');
+    const nameInput = document.getElementById('name');
+    
+    form.addEventListener('submit', function(e) {
+        const name = nameInput.value.trim();
+        
+        if (!name) {
+            e.preventDefault();
+            alert('Por favor, ingresa un nombre para el documento');
+            nameInput.focus();
+            return false;
+        }
+        
+        if (name.length < 3) {
+            e.preventDefault();
+            alert('El nombre del documento debe tener al menos 3 caracteres');
+            nameInput.focus();
+            return false;
+        }
+    });
+    
+    // Contador de caracteres
+    nameInput.addEventListener('input', function() {
+        const maxLength = 255;
+        const currentLength = this.value.length;
+        
+        // Crear o actualizar contador si no existe
+        let counter = document.getElementById('name-counter');
+        if (!counter) {
+            counter = document.createElement('small');
+            counter.id = 'name-counter';
+            counter.className = 'form-text text-muted';
+            this.parentNode.appendChild(counter);
+        }
+        
+        counter.textContent = `${currentLength}/${maxLength} caracteres`;
+        
+        if (currentLength > maxLength * 0.9) {
+            counter.className = 'form-text text-warning';
+        } else {
+            counter.className = 'form-text text-muted';
+        }
+    });
+});
+</script>
+{% endblock %}

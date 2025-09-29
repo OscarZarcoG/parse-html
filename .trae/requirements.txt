@@ -1,0 +1,16 @@
+asgiref==3.8.1
+Django==5.0.6
+django-cors-headers==4.3.1
+django-filter==24.2
+djangorestframework==3.15.1
+#docx2pdf
+#python-docx==1.1.2
+#pywin32==306
+#reportlab==4.2.0
+sqlparse==0.5.0
+psycopg2-binary
+yt-dlp==2025.8.27
+#spotipy==2.25.1
+pydub==0.25.1
+requests==2.32.5
+Pillow

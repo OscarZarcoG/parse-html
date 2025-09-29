@@ -1,0 +1,210 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Lista de Plantillas - Sistema de Parseo{% endblock %}
+
+{% block page_title %}Mis Plantillas{% endblock %}
+{% block page_subtitle %} Lista de plantillas{% endblock %}
+
+{% block page_header_actions %}
+<a href="{% url 'templates:create_template' %}" class="btn btn-primary">
+    <i class="fas fa-plus me-2"></i>Crear Plantilla
+</a>
+{% endblock %}
+
+
+{% block content %}
+<div class="container">
+
+    <!-- Filtros -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-4">
+                            <label for="status" class="form-label">Estado</label>
+                            <select name="status" id="status" class="form-select">
+                                <option value="">Todos los estados</option>
+                                {% for value, label in status_choices %}
+                                    <option value="{{ value }}" {% if current_status == value %}selected{% endif %}>
+                                        {{ label }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="category" class="form-label">Categoría</label>
+                            <select name="category" id="category" class="form-select">
+                                <option value="">Todas las categorías</option>
+                                {% for category in categories %}
+                                    <option value="{{ category.id }}" {% if current_category == category.id|stringformat:"s" %}selected{% endif %}>
+                                        {{ category.name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <button type="submit" class="btn btn-outline-primary me-2">
+                                <i class="fas fa-filter"></i> Filtrar
+                            </button>
+                            <a href="{% url 'templates:template_list' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times"></i> Limpiar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de plantillas -->
+    <div class="row">
+        {% if templates %}
+            {% for template in templates %}
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">{{ template.name }}</h5>
+                            <span class="badge {% if template.status == 'active' %}bg-success{% elif template.status == 'draft' %}bg-warning{% else %}bg-secondary{% endif %}">
+                                {{ template.get_status_display }}
+                            </span>
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text">{{ template.description|truncatewords:20|default:"Sin descripción" }}</p>
+                            
+                            <div class="mb-3">
+                                {% if template.category %}
+                                    <span class="badge bg-info">{{ template.category.name }}</span>
+                                {% endif %}
+                                {% if template.tags %}
+                                    {% for tag in template.tags %}
+                                        <span class="badge bg-light text-dark">{{ tag }}</span>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+
+                            <div class="row text-muted small">
+                                <div class="col-6">
+                                    <i class="fas fa-calendar"></i> {{ template.created_at|date:"d/m/Y" }}
+                                </div>
+                                <div class="col-6">
+                                    <i class="fas fa-code"></i> {{ template.placeholders_data|length }} placeholders
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <div class="btn-group w-100" role="group">
+                                <a href="{% url 'templates:template_detail' template.id %}" class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-eye"></i> Ver
+                                </a>
+                                <a href="{% url 'templates:template_editor' template.id %}" class="btn btn-outline-success btn-sm">
+                                    <i class="fas fa-edit"></i> Editar
+                                </a>
+                                <a href="{% url 'templates:preview_template' template.id %}" class="btn btn-outline-info btn-sm" target="_blank">
+                                    <i class="fas fa-external-link-alt"></i> Vista Previa
+                                </a>
+                                <div class="btn-group" role="group">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" href="{% url 'templates:duplicate_template' template.id %}">
+                                            <i class="fas fa-copy"></i> Duplicar
+                                        </a></li>
+                                        <li><a class="dropdown-item" href="{% url 'templates:export_template' template.id %}">
+                                            <i class="fas fa-download"></i> Exportar
+                                        </a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item text-danger" href="#" onclick="deleteTemplate({{ template.id }})">
+                                            <i class="fas fa-trash"></i> Eliminar
+                                        </a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="col-12">
+                <div class="text-center py-5">
+                    <i class="fas fa-file-code fa-4x text-muted mb-3"></i>
+                    <h4 class="text-muted">No tienes plantillas aún</h4>
+                    <p class="text-muted">Crea tu primera plantilla para comenzar</p>
+                    <a href="{% url 'templates:create_template' %}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Crear Primera Plantilla
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Paginación -->
+    {% if page_obj.has_other_pages %}
+        <div class="row">
+            <div class="col-12">
+                <nav aria-label="Paginación de plantillas">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1{% if current_status %}&status={{ current_status }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}">Primera</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}">Anterior</a>
+                            </li>
+                        {% endif %}
+
+                        {% for num in page_obj.paginator.page_range %}
+                            {% if page_obj.number == num %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ num }}</span>
+                                </li>
+                            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ num }}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}">{{ num }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}">Siguiente</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}">Última</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+function deleteTemplate(templateId) {
+    if (confirm('¿Estás seguro de que quieres eliminar esta plantilla? Esta acción no se puede deshacer.')) {
+        fetch(`/templates/${templateId}/delete/`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error al eliminar la plantilla: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al eliminar la plantilla');
+        });
+    }
+}
+</script>
+{% endblock %}

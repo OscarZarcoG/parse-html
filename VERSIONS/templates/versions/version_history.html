@@ -1,0 +1,403 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Historial de Versiones - {{ template.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .version-card {
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        background: white;
+        transition: all 0.2s;
+    }
+    
+    .version-card:hover {
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        border-color: #3b82f6;
+    }
+    
+    .version-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+    
+    .version-number {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #1f2937;
+    }
+    
+    .version-status {
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        text-transform: uppercase;
+    }
+    
+    .status-current {
+        background-color: #dcfce7;
+        color: #166534;
+    }
+    
+    .status-committed {
+        background-color: #dbeafe;
+        color: #1e40af;
+    }
+    
+    .status-draft {
+        background-color: #fef3c7;
+        color: #92400e;
+    }
+    
+    .version-meta {
+        display: flex;
+        gap: 1rem;
+        font-size: 0.875rem;
+        color: #6b7280;
+        margin-bottom: 0.5rem;
+    }
+    
+    .version-actions {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 1rem;
+    }
+    
+    .btn-sm {
+        padding: 0.375rem 0.75rem;
+        font-size: 0.875rem;
+        border-radius: 0.375rem;
+        text-decoration: none;
+        border: 1px solid transparent;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .btn-primary {
+        background-color: #3b82f6;
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        background-color: #2563eb;
+    }
+    
+    .btn-secondary {
+        background-color: #6b7280;
+        color: white;
+    }
+    
+    .btn-secondary:hover {
+        background-color: #4b5563;
+    }
+    
+    .btn-danger {
+        background-color: #ef4444;
+        color: white;
+    }
+    
+    .btn-danger:hover {
+        background-color: #dc2626;
+    }
+    
+    .filters-section {
+        background: #f9fafb;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 2rem;
+    }
+    
+    .filter-group {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    
+    .filter-input {
+        padding: 0.5rem;
+        border: 1px solid #d1d5db;
+        border-radius: 0.375rem;
+        font-size: 0.875rem;
+    }
+    
+    .pagination {
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-top: 2rem;
+    }
+    
+    .page-link {
+        padding: 0.5rem 0.75rem;
+        border: 1px solid #d1d5db;
+        border-radius: 0.375rem;
+        text-decoration: none;
+        color: #374151;
+    }
+    
+    .page-link:hover {
+        background-color: #f3f4f6;
+    }
+    
+    .page-link.active {
+        background-color: #3b82f6;
+        color: white;
+        border-color: #3b82f6;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Historial de Versiones</h1>
+            <p class="text-gray-600 mt-1">{{ template.name }}</p>
+        </div>
+        <div class="flex gap-2">
+            <a href="{% url 'templates:template_detail' template.id %}" class="btn-secondary btn-sm">
+                ← Volver a Plantilla
+            </a>
+            <a href="{% url 'versions:branch_management' template.id %}" class="btn-primary btn-sm">
+                Gestionar Ramas
+            </a>
+        </div>
+    </div>
+    
+    <!-- Filtros -->
+    <div class="filters-section">
+        <form method="get" class="filter-group">
+            <div>
+                <label for="branch" class="block text-sm font-medium text-gray-700 mb-1">Rama:</label>
+                <select name="branch" id="branch" class="filter-input">
+                    <option value="">Todas las ramas</option>
+                    {% for branch in branches %}
+                        <option value="{{ branch.name }}" {% if current_branch == branch.name %}selected{% endif %}>
+                            {{ branch.name }}{% if branch.is_main %} (Principal){% endif %}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div>
+                <label for="author" class="block text-sm font-medium text-gray-700 mb-1">Autor:</label>
+                <input type="text" name="author" id="author" value="{{ current_author }}" 
+                       placeholder="Buscar por autor..." class="filter-input">
+            </div>
+            
+            <div class="flex items-end">
+                <button type="submit" class="btn-primary btn-sm">Filtrar</button>
+                <a href="{% url 'versions:version_history' template.id %}" class="btn-secondary btn-sm ml-2">Limpiar</a>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Estadísticas -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div class="bg-blue-50 p-4 rounded-lg">
+            <div class="text-2xl font-bold text-blue-600">{{ total_versions }}</div>
+            <div class="text-sm text-blue-800">Total de Versiones</div>
+        </div>
+        <div class="bg-green-50 p-4 rounded-lg">
+            <div class="text-2xl font-bold text-green-600">{{ branches.count }}</div>
+            <div class="text-sm text-green-800">Ramas Activas</div>
+        </div>
+        <div class="bg-purple-50 p-4 rounded-lg">
+            <div class="text-2xl font-bold text-purple-600">
+                {% if page_obj.object_list %}{{ page_obj.object_list.0.version_number }}{% else %}0{% endif %}
+            </div>
+            <div class="text-sm text-purple-800">Versión Actual</div>
+        </div>
+    </div>
+    
+    <!-- Lista de Versiones -->
+    <div class="versions-list">
+        {% for version in page_obj %}
+            <div class="version-card">
+                <div class="version-header">
+                    <div class="version-number">
+                        Versión {{ version.version_number }}
+                        {% if version.is_current %}
+                            <span class="version-status status-current">Actual</span>
+                        {% elif version.status == 'committed' %}
+                            <span class="version-status status-committed">Confirmada</span>
+                        {% else %}
+                            <span class="version-status status-draft">Borrador</span>
+                        {% endif %}
+                    </div>
+                    <div class="text-sm text-gray-500">
+                        {{ version.created_at|date:"d/m/Y H:i" }}
+                    </div>
+                </div>
+                
+                <div class="version-meta">
+                    <span><strong>Rama:</strong> {{ version.branch_name }}</span>
+                    <span><strong>Autor:</strong> {{ version.author.get_full_name|default:version.author.username }}</span>
+                    {% if version.changes_summary.type %}
+                        <span><strong>Tipo:</strong> {{ version.changes_summary.type|title }}</span>
+                    {% endif %}
+                </div>
+                
+                <div class="text-gray-700 mb-2">
+                    <strong>Mensaje:</strong> {{ version.commit_message|default:"Sin mensaje de commit" }}
+                </div>
+                
+                {% if version.changes_summary %}
+                    <div class="text-sm text-gray-600 mb-2">
+                        {% if version.changes_summary.files_changed %}
+                            <strong>Archivos modificados:</strong> {{ version.changes_summary.files_changed|join:", " }}
+                        {% endif %}
+                    </div>
+                {% endif %}
+                
+                <div class="version-actions">
+                    <a href="{% url 'versions:version_detail' version.id %}" class="btn-primary btn-sm">
+                        Ver Detalles
+                    </a>
+                    
+                    {% if not version.is_current %}
+                        <button onclick="compareWithCurrent({{ version.id }})" class="btn-secondary btn-sm">
+                            Comparar con Actual
+                        </button>
+                        
+                        {% if template.can_user_edit %}
+                            <button onclick="rollbackToVersion({{ version.id }})" class="btn-danger btn-sm">
+                                Revertir a Esta Versión
+                            </button>
+                        {% endif %}
+                    {% endif %}
+                    
+                    {% if forloop.counter0 > 0 %}
+                        <button onclick="compareWithPrevious({{ version.id }}, {{ page_obj|slice:forloop.counter0|first.id }})" 
+                                class="btn-secondary btn-sm">
+                            Comparar con Anterior
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+        {% empty %}
+            <div class="text-center py-8">
+                <div class="text-gray-500 text-lg">No se encontraron versiones</div>
+                <p class="text-gray-400 mt-2">Esta plantilla aún no tiene versiones guardadas.</p>
+            </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Paginación -->
+    {% if page_obj.has_other_pages %}
+        <div class="pagination">
+            {% if page_obj.has_previous %}
+                <a href="?page=1{% if current_branch %}&branch={{ current_branch }}{% endif %}{% if current_author %}&author={{ current_author }}{% endif %}" 
+                   class="page-link">Primera</a>
+                <a href="?page={{ page_obj.previous_page_number }}{% if current_branch %}&branch={{ current_branch }}{% endif %}{% if current_author %}&author={{ current_author }}{% endif %}" 
+                   class="page-link">Anterior</a>
+            {% endif %}
+            
+            <span class="page-link active">
+                Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+            </span>
+            
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}{% if current_branch %}&branch={{ current_branch }}{% endif %}{% if current_author %}&author={{ current_author }}{% endif %}" 
+                   class="page-link">Siguiente</a>
+                <a href="?page={{ page_obj.paginator.num_pages }}{% if current_branch %}&branch={{ current_branch }}{% endif %}{% if current_author %}&author={{ current_author }}{% endif %}" 
+                   class="page-link">Última</a>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+
+<!-- Modal de Confirmación para Rollback -->
+<div id="rollbackModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+        <h3 class="text-lg font-semibold mb-4">Confirmar Rollback</h3>
+        <p class="text-gray-600 mb-4">
+            ¿Estás seguro de que quieres revertir a esta versión? Esta acción creará una nueva versión 
+            con el contenido de la versión seleccionada.
+        </p>
+        
+        <div class="mb-4">
+            <label for="rollbackReason" class="block text-sm font-medium text-gray-700 mb-2">
+                Razón del rollback (opcional):
+            </label>
+            <textarea id="rollbackReason" rows="3" class="w-full border border-gray-300 rounded-md px-3 py-2"
+                      placeholder="Describe por qué estás revirtiendo a esta versión..."></textarea>
+        </div>
+        
+        <div class="flex justify-end gap-2">
+            <button onclick="closeRollbackModal()" class="btn-secondary btn-sm">Cancelar</button>
+            <button onclick="confirmRollback()" class="btn-danger btn-sm">Confirmar Rollback</button>
+        </div>
+    </div>
+</div>
+
+<script>
+let selectedVersionId = null;
+
+function compareWithCurrent(versionId) {
+    const currentVersionId = {{ page_obj.object_list.0.id|default:0 }};
+    if (currentVersionId) {
+        window.location.href = `/versions/compare/${versionId}/${currentVersionId}/`;
+    }
+}
+
+function compareWithPrevious(versionId, previousVersionId) {
+    window.location.href = `/versions/compare/${previousVersionId}/${versionId}/`;
+}
+
+function rollbackToVersion(versionId) {
+    selectedVersionId = versionId;
+    document.getElementById('rollbackModal').classList.remove('hidden');
+    document.getElementById('rollbackModal').classList.add('flex');
+}
+
+function closeRollbackModal() {
+    document.getElementById('rollbackModal').classList.add('hidden');
+    document.getElementById('rollbackModal').classList.remove('flex');
+    selectedVersionId = null;
+    document.getElementById('rollbackReason').value = '';
+}
+
+function confirmRollback() {
+    if (!selectedVersionId) return;
+    
+    const reason = document.getElementById('rollbackReason').value;
+    const formData = new FormData();
+    formData.append('reason', reason);
+    formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+    
+    fetch(`/versions/rollback/${selectedVersionId}/`, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            if (data.redirect_url) {
+                window.location.href = data.redirect_url;
+            } else {
+                window.location.reload();
+            }
+        } else {
+            alert('Error: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error al realizar el rollback');
+    })
+    .finally(() => {
+        closeRollbackModal();
+    });
+}
+</script>
+{% endblock %}

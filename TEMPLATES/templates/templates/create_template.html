@@ -1,0 +1,207 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Crear Nueva Plantilla{% endblock %}
+
+{% block extra_css %}
+<style>
+    .create-header {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+        padding: 2rem 0;
+        margin-bottom: 2rem;
+    }
+    
+    .form-container {
+        background: white;
+        border-radius: 10px;
+        padding: 2rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+    
+    .form-group label {
+        font-weight: 600;
+        color: #495057;
+    }
+    
+    .form-control:focus {
+        border-color: #28a745;
+        box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+    }
+    
+    .btn-create {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        border: none;
+        padding: 12px 30px;
+        font-weight: 600;
+    }
+    
+    .btn-create:hover {
+        background: linear-gradient(135deg, #218838 0%, #1e7e34 100%);
+        transform: translateY(-1px);
+    }
+    
+    .preview-section {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-top: 2rem;
+    }
+    
+    .template-preview {
+        background: white;
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
+        padding: 1rem;
+        font-family: 'Courier New', monospace;
+        font-size: 0.9rem;
+        color: #495057;
+    }
+    
+    .help-text {
+        font-size: 0.875rem;
+        color: #6c757d;
+        margin-top: 0.25rem;
+    }
+    
+    .category-info {
+        background: #e3f2fd;
+        border-left: 4px solid #2196f3;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        border-radius: 0 5px 5px 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="create-header">
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <h1><i class="fas fa-plus-circle"></i> Crear Nueva Plantilla</h1>
+                <p class="lead">Crea una nueva plantilla HTML personalizable con placeholders dinámicos</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="form-container">
+                <form method="post" id="createTemplateForm">
+                    {% csrf_token %}
+                    
+                    <div class="form-group">
+                        <label for="name">Nombre de la Plantilla *</label>
+                        <input type="text" class="form-control" id="name" name="name" required 
+                               placeholder="Ej: Plantilla de Factura, Newsletter, Certificado...">
+                        <div class="help-text">Ingresa un nombre descriptivo para tu plantilla</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="description">Descripción</label>
+                        <textarea class="form-control" id="description" name="description" rows="3" 
+                                  placeholder="Describe el propósito y características de esta plantilla..."></textarea>
+                        <div class="help-text">Opcional: Describe para qué se usará esta plantilla</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="category">Categoría</label>
+                        <select class="form-control" id="category" name="category">
+                            <option value="">Seleccionar categoría (opcional)</option>
+                            {% for category in categories %}
+                                <option value="{{ category.id }}">{{ category.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="help-text">Organiza tu plantilla en una categoría específica</div>
+                    </div>
+                    
+                    <div class="form-group text-center">
+                        <button type="submit" class="btn btn-create btn-lg">
+                            <i class="fas fa-magic"></i> Crear Plantilla
+                        </button>
+                        <a href="{% url 'templates:template_list' %}" class="btn btn-secondary btn-lg ml-3">
+                            <i class="fas fa-times"></i> Cancelar
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="category-info">
+                <h5><i class="fas fa-info-circle"></i> ¿Qué incluye una plantilla?</h5>
+                <ul class="mb-0">
+                    <li>Estructura HTML básica</li>
+                    <li>Estilos CSS predeterminados</li>
+                    <li>JavaScript funcional</li>
+                    <li>Placeholders configurables</li>
+                    <li>Sistema de versiones</li>
+                </ul>
+            </div>
+            
+            <div class="preview-section">
+                <h5><i class="fas fa-eye"></i> Vista Previa del Contenido Inicial</h5>
+                <div class="template-preview">
+                    <strong>HTML:</strong><br>
+                    &lt;!DOCTYPE html&gt;<br>
+                    &lt;html&gt;<br>
+                    &nbsp;&nbsp;&lt;head&gt;<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&lt;title&gt;Nueva Plantilla&lt;/title&gt;<br>
+                    &nbsp;&nbsp;&lt;/head&gt;<br>
+                    &nbsp;&nbsp;&lt;body&gt;<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&lt;h1&gt;{{titulo}}&lt;/h1&gt;<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&lt;p&gt;{{contenido}}&lt;/p&gt;<br>
+                    &nbsp;&nbsp;&lt;/body&gt;<br>
+                    &lt;/html&gt;
+                </div>
+                
+                <div class="mt-3">
+                    <strong>Placeholders incluidos:</strong>
+                    <ul class="mt-2">
+                        <li><code>{{titulo}}</code> - Título principal</li>
+                        <li><code>{{contenido}}</code> - Contenido principal</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="alert alert-info mt-3">
+                <h6><i class="fas fa-lightbulb"></i> Consejo</h6>
+                <p class="mb-0">Después de crear la plantilla, podrás personalizarla completamente en el editor visual con sintaxis resaltada y vista previa en tiempo real.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('createTemplateForm').addEventListener('submit', function(e) {
+    const nameInput = document.getElementById('name');
+    if (!nameInput.value.trim()) {
+        e.preventDefault();
+        alert('Por favor, ingresa un nombre para la plantilla.');
+        nameInput.focus();
+        return false;
+    }
+    
+    // Mostrar indicador de carga
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creando...';
+    submitBtn.disabled = true;
+    
+    // Si hay error, restaurar botón
+    setTimeout(() => {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    }, 5000);
+});
+
+// Auto-focus en el campo nombre
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('name').focus();
+});
+</script>
+{% endblock %}

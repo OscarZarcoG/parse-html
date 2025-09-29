@@ -1,0 +1,191 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - Sistema de Parseo{% endblock %}
+
+{% block page_title %}Dashboard{% endblock %}
+{% block page_subtitle %}Panel de control principal del sistema{% endblock %}
+
+{% block content %}
+
+<!-- Estadísticas -->
+<div class="row mb-4">
+    <div class="col-xl-4 col-md-6 mb-4">
+        <div class="card border-left-primary shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                            Documentos Subidos
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_documents }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-file-upload fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-4 col-md-6 mb-4">
+        <div class="card border-left-success shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                            Plantillas Generadas
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_templates }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-code fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-4 col-md-6 mb-4">
+        <div class="card border-left-info shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                            Versiones Activas
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_versions }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-code-branch fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Documentos Recientes -->
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-primary">Documentos Recientes</h6>
+                
+                <a href="{% url 'parser:upload_document' %}" class="btn btn-sm btn-primary">Subir Documento</a>
+            </div>
+            <div class="card-body">
+                {% if recent_documents %}
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for document in recent_documents %}
+                                <tr>
+                                    <td><a href="{% url 'parser:document_preview' document.id %}" class="text-decoration-none text-reset" >{{ document.name }}"></a></td>
+                                   
+                                    <td>
+                                        {% if document.status == 'processed' %}
+                                            <span class="badge bg-success">Procesado</span>
+                                        {% elif document.status == 'processing' %}
+                                            <span class="badge bg-warning">Procesando</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Error</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'parser:document_preview' document.id %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{% url 'parser:edit_document' document.id %}" class="btn btn-sm btn-outline-secondary">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <button class="btn btn-sm btn-outline-danger" onclick="deleteDocument({{ document.id }}, '{{ document.name }}')">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-file-upload fa-3x text-gray-300 mb-3"></i>
+                        <p class="text-muted">No hay documentos subidos aún.</p>
+                        <a href="{% url 'parser:upload_document' %}" class="btn btn-primary">
+                            Subir Primer Documento
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Actividad Reciente -->
+    <div class="col-lg-4">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Actividad Reciente</h6>
+            </div>
+            <div class="card-body">
+                {% if recent_activity %}
+                    {% for activity in recent_activity %}
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="me-3">
+                            {% if activity.action == 'upload' %}
+                                <i class="fas fa-upload text-primary"></i>
+                            {% elif activity.action == 'edit' %}
+                                <i class="fas fa-edit text-warning"></i>
+                            {% elif activity.action == 'version' %}
+                                <i class="fas fa-code-branch text-info"></i>
+                            {% endif %}
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="small text-gray-500">{{ activity.created_at|timesince }} ago</div>
+                            <div>{{ activity.description }}</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-history fa-2x text-gray-300 mb-2"></i>
+                        <p class="text-muted small">No hay actividad reciente.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .border-left-primary {
+        border-left: 0.25rem solid #4e73df !important;
+    }
+    .border-left-success {
+        border-left: 0.25rem solid #1cc88a !important;
+    }
+    .border-left-info {
+        border-left: 0.25rem solid #36b9cc !important;
+    }
+    .border-left-warning {
+        border-left: 0.25rem solid #f6c23e !important;
+    }
+    .text-gray-300 {
+        color: #dddfeb !important;
+    }
+    .text-gray-500 {
+        color: #858796 !important;
+    }
+    .text-gray-800 {
+        color: #5a5c69 !important;
+    }
+</style>
+{% endblock %}

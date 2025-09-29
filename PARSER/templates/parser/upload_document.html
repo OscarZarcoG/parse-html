@@ -1,0 +1,412 @@
+{% extends 'base.html' %}
+
+{% block title %}Subir Documento - Sistema de Parseo{% endblock %}
+
+{% block page_title %}Subir Documento{% endblock %}
+{% block page_subtitle %}Sube tu documento para su procesamiento{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'parser:document_list' %}" class="btn btn-outline-secondary">
+    <i class="fas fa-list me-2"></i>Ver Documentos
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data" id="uploadForm">
+                    {% csrf_token %}
+                    
+                    <!-- Upload Zone -->
+                    <div class="upload-zone mb-4" id="uploadZone">
+                        <div class="upload-content">
+                            <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
+                            <h5 class="mb-2">Arrastra y suelta tu archivo aquí</h5>
+                            <p class="text-muted mb-3">o haz clic para seleccionar</p>
+                            <input type="file" name="document" id="documentFile" class="d-none" 
+                                   accept=".docx,.xlsx,.xls,.pdf" required>
+                            <button type="button" class="btn btn-outline-primary" id="selectFileBtn">
+                                <i class="fas fa-folder-open me-2"></i>Seleccionar Archivo
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- File Info -->
+                    <div id="fileInfo" class="d-none mb-4">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center">
+                                    <i id="fileIcon" class="fas fa-file fa-2x text-primary me-3"></i>
+                                    <div class="flex-grow-1">
+                                        <h6 id="fileName" class="mb-1"></h6>
+                                        <small id="fileSize" class="text-muted"></small>
+                                    </div>
+                                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="clearFile()">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Document Name -->
+                    <div class="mb-3">
+                        <label for="documentName" class="form-label">Nombre del Documento</label>
+                        <input type="text" class="form-control" id="documentName" name="name" 
+                               placeholder="Ingresa un nombre descriptivo (opcional)">
+                        <div class="form-text">Si no especificas un nombre, se usará el nombre del archivo</div>
+                    </div>
+                    
+                    <!-- Processing Options -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h6 class="card-title mb-0">
+                                <i class="fas fa-cogs me-2"></i>Opciones de Procesamiento
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="autoDetectPlaceholders" 
+                                               name="auto_detect_placeholders" checked>
+                                        <label class="form-check-label" for="autoDetectPlaceholders">
+                                            Detectar placeholders automáticamente
+                                        </label>
+                                        <div class="form-text">Busca texto en rojo para convertir en placeholders</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="preserveFormatting" 
+                                               name="preserve_formatting" checked>
+                                        <label class="form-check-label" for="preserveFormatting">
+                                            Preservar formato original
+                                        </label>
+                                        <div class="form-text">Mantiene estilos, colores y alineaciones</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Submit Button -->
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
+                            <i class="fas fa-upload me-2"></i>
+                            <span id="submitText">Subir y Procesar Documento</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Supported Formats -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-info-circle me-2"></i>Formatos Soportados
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-4 mb-3">
+                        <div class="p-3">
+                            <i class="fas fa-file-word fa-2x text-primary mb-2"></i>
+                            <h6>Microsoft Word</h6>
+                            <small class="text-muted">.docx</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="p-3">
+                            <i class="fas fa-file-excel fa-2x text-success mb-2"></i>
+                            <h6>Microsoft Excel</h6>
+                            <small class="text-muted">.xlsx, .xls</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="p-3">
+                            <i class="fas fa-file-pdf fa-2x text-danger mb-2"></i>
+                            <h6>Adobe PDF</h6>
+                            <small class="text-muted">.pdf</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="alert alert-info">
+                    <i class="fas fa-lightbulb me-2"></i>
+                    <strong>Consejo:</strong> Para mejores resultados, marca el contenido dinámico en color rojo 
+                    antes de subir el documento. Esto ayudará al sistema a identificar automáticamente los placeholders.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Progress Modal -->
+<div class="modal fade" id="progressModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-cogs me-2"></i>Procesando Documento
+                </h5>
+            </div>
+            <div class="modal-body text-center">
+                <div class="spinner-border text-primary mb-3" role="status">
+                    <span class="visually-hidden">Procesando...</span>
+                </div>
+                <h6 id="progressText">Subiendo archivo...</h6>
+                <p class="text-muted mb-0" id="progressDetail">Por favor espera mientras procesamos tu documento</p>
+                
+                <div class="progress mt-3">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                         role="progressbar" style="width: 0%" id="progressBar">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const uploadZone = document.getElementById('uploadZone');
+    const fileInput = document.getElementById('documentFile');
+    const fileInfo = document.getElementById('fileInfo');
+    const fileName = document.getElementById('fileName');
+    const fileSize = document.getElementById('fileSize');
+    const fileIcon = document.getElementById('fileIcon');
+    const documentName = document.getElementById('documentName');
+    const uploadForm = document.getElementById('uploadForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const submitText = document.getElementById('submitText');
+    const selectFileBtn = document.getElementById('selectFileBtn');
+    const progressModal = new bootstrap.Modal(document.getElementById('progressModal'));
+    
+    // File selection button click handler
+    selectFileBtn.addEventListener('click', function() {
+        fileInput.click();
+    });
+    
+    // Drag and drop functionality
+    uploadZone.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        uploadZone.classList.add('dragover');
+    });
+    
+    uploadZone.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        uploadZone.classList.remove('dragover');
+    });
+    
+    uploadZone.addEventListener('drop', function(e) {
+        e.preventDefault();
+        uploadZone.classList.remove('dragover');
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            handleFileSelect(files[0]);
+        }
+    });
+    
+    uploadZone.addEventListener('click', function() {
+        fileInput.click();
+    });
+    
+    fileInput.addEventListener('change', function() {
+        if (this.files.length > 0) {
+            handleFileSelect(this.files[0]);
+        }
+    });
+    
+    function handleFileSelect(file) {
+        // Validate file type
+        const allowedTypes = [
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'application/vnd.ms-excel',
+            'application/pdf'
+        ];
+        
+        if (!allowedTypes.includes(file.type)) {
+            alert('Tipo de archivo no soportado. Por favor selecciona un archivo .docx, .xlsx, .xls o .pdf');
+            return;
+        }
+        
+        // Validate file size (max 10MB)
+        const maxSize = 10 * 1024 * 1024; // 10MB
+        if (file.size > maxSize) {
+            alert('El archivo es demasiado grande. El tamaño máximo permitido es 10MB');
+            return;
+        }
+        
+        // Update file info
+        fileName.textContent = file.name;
+        fileSize.textContent = formatFileSize(file.size);
+        
+        // Update icon based on file type
+        if (file.type.includes('word')) {
+            fileIcon.className = 'fas fa-file-word fa-2x text-primary me-3';
+        } else if (file.type.includes('sheet') || file.type.includes('excel')) {
+            fileIcon.className = 'fas fa-file-excel fa-2x text-success me-3';
+        } else if (file.type.includes('pdf')) {
+            fileIcon.className = 'fas fa-file-pdf fa-2x text-danger me-3';
+        }
+        
+        // Auto-fill document name if empty
+        if (!documentName.value) {
+            const nameWithoutExt = file.name.replace(/\.[^/.]+$/, "");
+            documentName.value = nameWithoutExt;
+        }
+        
+        // Show file info
+        fileInfo.classList.remove('d-none');
+        uploadZone.style.display = 'none';
+    }
+    
+    function clearFile() {
+        fileInput.value = '';
+        fileInfo.classList.add('d-none');
+        uploadZone.style.display = 'block';
+        documentName.value = '';
+    }
+    
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+    
+    // Form submission
+    uploadForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        if (!fileInput.files.length) {
+            alert('Por favor selecciona un archivo');
+            return;
+        }
+        
+        // Show progress modal
+        progressModal.show();
+        showLoading(submitBtn);
+        submitText.textContent = 'Procesando...';
+        
+        // Simulate progress
+        let progress = 0;
+        const progressBar = document.getElementById('progressBar');
+        const progressText = document.getElementById('progressText');
+        const progressDetail = document.getElementById('progressDetail');
+        
+        const progressInterval = setInterval(function() {
+            progress += Math.random() * 15;
+            if (progress > 90) progress = 90;
+            
+            progressBar.style.width = progress + '%';
+            
+            if (progress < 30) {
+                progressText.textContent = 'Subiendo archivo...';
+                progressDetail.textContent = 'Transfiriendo datos al servidor';
+            } else if (progress < 60) {
+                progressText.textContent = 'Analizando documento...';
+                progressDetail.textContent = 'Extrayendo contenido y estructura';
+            } else if (progress < 90) {
+                progressText.textContent = 'Generando plantilla...';
+                progressDetail.textContent = 'Creando HTML, CSS y detectando placeholders';
+            }
+        }, 500);
+        
+        // Submit form
+        const formData = new FormData(this);
+        
+        fetch(this.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            clearInterval(progressInterval);
+            progressBar.style.width = '100%';
+            progressText.textContent = 'Completado';
+            progressDetail.textContent = 'Documento procesado exitosamente';
+            
+            setTimeout(function() {
+                if (data.success) {
+                    window.location.href = data.redirect_url;
+                } else {
+                    progressModal.hide();
+                    hideLoading(submitBtn);
+                    submitText.textContent = 'Subir y Procesar Documento';
+                    alert(data.error || 'Error al procesar el documento');
+                }
+            }, 1000);
+        })
+        .catch(error => {
+            clearInterval(progressInterval);
+            progressModal.hide();
+            hideLoading(submitBtn);
+            submitText.textContent = 'Subir y Procesar Documento';
+            console.error('Error:', error);
+            alert('Error al procesar el documento. Por favor intenta nuevamente.');
+        });
+    });
+    
+    // Utility functions
+    function showLoading(button) {
+        if (button) {
+            button.disabled = true;
+            const spinner = button.querySelector('.spinner-border');
+            if (spinner) {
+                spinner.classList.remove('d-none');
+            } else {
+                // Add spinner if it doesn't exist
+                const spinnerElement = document.createElement('span');
+                spinnerElement.className = 'spinner-border spinner-border-sm me-2';
+                spinnerElement.setAttribute('role', 'status');
+                spinnerElement.setAttribute('aria-hidden', 'true');
+                button.insertBefore(spinnerElement, button.firstChild);
+            }
+        }
+    }
+    
+    function hideLoading(button) {
+        if (button) {
+            button.disabled = false;
+            const spinner = button.querySelector('.spinner-border');
+            if (spinner) {
+                spinner.remove();
+            }
+        }
+    }
+    
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    // Make functions global
+    window.clearFile = clearFile;
+    window.showLoading = showLoading;
+    window.hideLoading = hideLoading;
+    window.getCookie = getCookie;
+});
+</script>
+{% endblock %}

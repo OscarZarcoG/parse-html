@@ -1,0 +1,432 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Comparar Versiones - {{ template.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .comparison-header {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .version-info {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+    }
+    
+    .version-card {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        padding: 1rem;
+    }
+    
+    .version-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: #1a202c;
+        margin-bottom: 0.5rem;
+    }
+    
+    .version-meta {
+        font-size: 0.875rem;
+        color: #718096;
+        line-height: 1.5;
+    }
+    
+    .diff-tabs {
+        border-bottom: 1px solid #e2e8f0;
+        margin-bottom: 1rem;
+    }
+    
+    .tab-list {
+        display: flex;
+        gap: 0;
+    }
+    
+    .tab-button {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        background: none;
+        cursor: pointer;
+        border-bottom: 2px solid transparent;
+        font-weight: 500;
+        color: #718096;
+        transition: all 0.2s;
+    }
+    
+    .tab-button.active {
+        color: #3182ce;
+        border-bottom-color: #3182ce;
+        background: #f7fafc;
+    }
+    
+    .tab-button:hover {
+        color: #2d3748;
+        background: #f7fafc;
+    }
+    
+    .diff-content {
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 6px;
+        overflow: hidden;
+    }
+    
+    .diff-header {
+        background: #e9ecef;
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid #dee2e6;
+        font-weight: 600;
+        color: #495057;
+    }
+    
+    .diff-body {
+        max-height: 600px;
+        overflow-y: auto;
+    }
+    
+    .diff-line {
+        display: flex;
+        font-family: 'Courier New', monospace;
+        font-size: 0.875rem;
+        line-height: 1.4;
+        margin: 0;
+        padding: 0.25rem 0;
+    }
+    
+    .line-number {
+        width: 60px;
+        padding: 0 0.5rem;
+        text-align: right;
+        color: #6c757d;
+        background: #f8f9fa;
+        border-right: 1px solid #dee2e6;
+        user-select: none;
+    }
+    
+    .line-content {
+        flex: 1;
+        padding: 0 0.5rem;
+        white-space: pre-wrap;
+        word-break: break-all;
+    }
+    
+    .diff-line.added {
+        background-color: #d4edda;
+        color: #155724;
+    }
+    
+    .diff-line.removed {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+    
+    .diff-line.context {
+        background-color: white;
+        color: #212529;
+    }
+    
+    .diff-line.info {
+        background-color: #d1ecf1;
+        color: #0c5460;
+        font-weight: 600;
+    }
+    
+    .changes-summary {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .summary-card {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        padding: 1rem;
+        text-align: center;
+    }
+    
+    .summary-number {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+    }
+    
+    .summary-label {
+        font-size: 0.875rem;
+        color: #718096;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    
+    .added-count {
+        color: #38a169;
+    }
+    
+    .removed-count {
+        color: #e53e3e;
+    }
+    
+    .no-changes {
+        text-align: center;
+        padding: 3rem;
+        color: #718096;
+    }
+    
+    .actions-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        padding: 1rem;
+        background: #f7fafc;
+        border-radius: 6px;
+    }
+    
+    .btn {
+        padding: 0.5rem 1rem;
+        border-radius: 0.375rem;
+        text-decoration: none;
+        font-weight: 500;
+        border: 1px solid transparent;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .btn-primary {
+        background-color: #3182ce;
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        background-color: #2c5282;
+    }
+    
+    .btn-secondary {
+        background-color: #718096;
+        color: white;
+    }
+    
+    .btn-secondary:hover {
+        background-color: #4a5568;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Comparar Versiones</h1>
+            <p class="text-gray-600 mt-1">{{ template.name }}</p>
+        </div>
+        <div class="flex gap-2">
+            <a href="{% url 'versions:version_history' template.id %}" class="btn btn-secondary">
+                ← Volver al Historial
+            </a>
+        </div>
+    </div>
+    
+    <!-- Información de las Versiones -->
+    <div class="comparison-header">
+        <div class="version-info">
+            <div class="version-card">
+                <div class="version-title">Versión {{ version1.version_number }}</div>
+                <div class="version-meta">
+                    <div><strong>Rama:</strong> {{ version1.branch_name }}</div>
+                    <div><strong>Autor:</strong> {{ version1.author.get_full_name|default:version1.author.username }}</div>
+                    <div><strong>Fecha:</strong> {{ version1.created_at|date:"d/m/Y H:i" }}</div>
+                    <div><strong>Mensaje:</strong> {{ version1.commit_message|default:"Sin mensaje" }}</div>
+                </div>
+            </div>
+            
+            <div class="version-card">
+                <div class="version-title">Versión {{ version2.version_number }}</div>
+                <div class="version-meta">
+                    <div><strong>Rama:</strong> {{ version2.branch_name }}</div>
+                    <div><strong>Autor:</strong> {{ version2.author.get_full_name|default:version2.author.username }}</div>
+                    <div><strong>Fecha:</strong> {{ version2.created_at|date:"d/m/Y H:i" }}</div>
+                    <div><strong>Mensaje:</strong> {{ version2.commit_message|default:"Sin mensaje" }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Resumen de Cambios -->
+    <div class="changes-summary">
+        <div class="summary-card">
+            <div class="summary-number added-count">
+                {{ comparison.comparison_data.html_changes.added|default:0 }}
+            </div>
+            <div class="summary-label">Líneas HTML Añadidas</div>
+        </div>
+        
+        <div class="summary-card">
+            <div class="summary-number removed-count">
+                {{ comparison.comparison_data.html_changes.removed|default:0 }}
+            </div>
+            <div class="summary-label">Líneas HTML Eliminadas</div>
+        </div>
+        
+        <div class="summary-card">
+            <div class="summary-number added-count">
+                {{ comparison.comparison_data.css_changes.added|default:0 }}
+            </div>
+            <div class="summary-label">Líneas CSS Añadidas</div>
+        </div>
+        
+        <div class="summary-card">
+            <div class="summary-number removed-count">
+                {{ comparison.comparison_data.css_changes.removed|default:0 }}
+            </div>
+            <div class="summary-label">Líneas CSS Eliminadas</div>
+        </div>
+    </div>
+    
+    <!-- Acciones -->
+    <div class="actions-bar">
+        <div class="text-sm text-gray-600">
+            Comparación realizada el {{ comparison.created_at|date:"d/m/Y H:i" }} 
+            por {{ comparison.compared_by.get_full_name|default:comparison.compared_by.username }}
+        </div>
+        
+        <div class="flex gap-2">
+            <a href="{% url 'versions:version_detail' version1.id %}" class="btn btn-secondary">
+                Ver Versión {{ version1.version_number }}
+            </a>
+            <a href="{% url 'versions:version_detail' version2.id %}" class="btn btn-secondary">
+                Ver Versión {{ version2.version_number }}
+            </a>
+        </div>
+    </div>
+    
+    <!-- Tabs de Diferencias -->
+    <div class="diff-tabs">
+        <div class="tab-list">
+            <button class="tab-button active" onclick="showTab('html')">HTML</button>
+            <button class="tab-button" onclick="showTab('css')">CSS</button>
+            <button class="tab-button" onclick="showTab('js')">JavaScript</button>
+        </div>
+    </div>
+    
+    <!-- Contenido HTML -->
+    <div id="html-tab" class="tab-content">
+        <div class="diff-content">
+            <div class="diff-header">
+                Diferencias en HTML
+            </div>
+            <div class="diff-body">
+                {% if html_diff %}
+                    {% for line in html_diff %}
+                        <div class="diff-line {% if line|slice:':1' == '+' %}added{% elif line|slice:':1' == '-' %}removed{% elif line|slice:':2' == '@@' %}info{% else %}context{% endif %}">
+                            <div class="line-number"></div>
+                            <div class="line-content">{{ line }}</div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="no-changes">
+                        <p>No hay diferencias en el contenido HTML</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Contenido CSS -->
+    <div id="css-tab" class="tab-content" style="display: none;">
+        <div class="diff-content">
+            <div class="diff-header">
+                Diferencias en CSS
+            </div>
+            <div class="diff-body">
+                {% if css_diff %}
+                    {% for line in css_diff %}
+                        <div class="diff-line {% if line|slice:':1' == '+' %}added{% elif line|slice:':1' == '-' %}removed{% elif line|slice:':2' == '@@' %}info{% else %}context{% endif %}">
+                            <div class="line-number"></div>
+                            <div class="line-content">{{ line }}</div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="no-changes">
+                        <p>No hay diferencias en el contenido CSS</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Contenido JavaScript -->
+    <div id="js-tab" class="tab-content" style="display: none;">
+        <div class="diff-content">
+            <div class="diff-header">
+                Diferencias en JavaScript
+            </div>
+            <div class="diff-body">
+                {% if js_diff %}
+                    {% for line in js_diff %}
+                        <div class="diff-line {% if line|slice:':1' == '+' %}added{% elif line|slice:':1' == '-' %}removed{% elif line|slice:':2' == '@@' %}info{% else %}context{% endif %}">
+                            <div class="line-number"></div>
+                            <div class="line-content">{{ line }}</div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="no-changes">
+                        <p>No hay diferencias en el contenido JavaScript</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function showTab(tabName) {
+    // Ocultar todos los tabs
+    const tabs = document.querySelectorAll('.tab-content');
+    tabs.forEach(tab => {
+        tab.style.display = 'none';
+    });
+    
+    // Remover clase active de todos los botones
+    const buttons = document.querySelectorAll('.tab-button');
+    buttons.forEach(button => {
+        button.classList.remove('active');
+    });
+    
+    // Mostrar el tab seleccionado
+    document.getElementById(tabName + '-tab').style.display = 'block';
+    
+    // Activar el botón correspondiente
+    event.target.classList.add('active');
+}
+
+// Numerar líneas en los diffs
+document.addEventListener('DOMContentLoaded', function() {
+    const diffBodies = document.querySelectorAll('.diff-body');
+    
+    diffBodies.forEach(body => {
+        const lines = body.querySelectorAll('.diff-line');
+        let lineNumber = 1;
+        
+        lines.forEach(line => {
+            const lineNumberEl = line.querySelector('.line-number');
+            const content = line.querySelector('.line-content').textContent;
+            
+            // Solo numerar líneas que no sean de información (@@ ... @@)
+            if (!content.startsWith('@@') && !content.startsWith('+++') && !content.startsWith('---')) {
+                lineNumberEl.textContent = lineNumber;
+                lineNumber++;
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

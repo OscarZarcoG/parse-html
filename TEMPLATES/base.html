@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Sistema de Parseo de Documentos{% endblock %}</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Estilos personalizados -->
+    <style>
+        :root {
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            --info-color: #17a2b8;
+            --light-color: #f8f9fa;
+            --dark-color: #343a40;
+            --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --gradient-success: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
+            --gradient-warning: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+            --border-radius: 12px;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            color: var(--dark-color);
+            line-height: 1.6;
+        }
+        
+        /* Navbar personalizada */
+        .navbar-custom {
+            background: var(--gradient-primary);
+            box-shadow: var(--shadow-md);
+            padding: 1rem 0;
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: white !important;
+        }
+        
+        .navbar-nav .nav-link {
+            color: rgba(255, 255, 255, 0.9) !important;
+            font-weight: 500;
+            margin: 0 0.5rem;
+            padding: 0.5rem 1rem !important;
+            border-radius: var(--border-radius);
+            transition: all 0.3s ease;
+        }
+        
+        .navbar-nav .nav-link:hover,
+        .navbar-nav .nav-link.active {
+            background: rgba(255, 255, 255, 0.2);
+            color: white !important;
+            transform: translateY(-2px);
+        }
+        
+        .dropdown-menu {
+            border: none;
+            box-shadow: var(--shadow-lg);
+            border-radius: var(--border-radius);
+            margin-top: 0.5rem;
+        }
+        
+        .dropdown-item {
+            padding: 0.75rem 1.5rem;
+            transition: all 0.3s ease;
+        }
+        
+        .dropdown-item:hover {
+            background: var(--light-color);
+            transform: translateX(5px);
+        }
+        
+        /* Contenido principal */
+        .main-content {
+            min-height: calc(100vh - 200px);
+            padding: 2rem 0;
+        }
+        
+        /* Cards personalizadas */
+        .card-custom {
+            border: none;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-md);
+            transition: all 0.3s ease;
+            background: white;
+        }
+        
+        .card-custom:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .card-header-custom {
+            background: var(--gradient-primary);
+            color: white;
+            border-radius: var(--border-radius) var(--border-radius) 0 0 !important;
+            padding: 1.5rem;
+            border: none;
+        }
+        
+        /* Botones personalizados */
+        .btn-custom {
+            border-radius: var(--border-radius);
+            font-weight: 600;
+            padding: 0.75rem 1.5rem;
+            transition: all 0.3s ease;
+            border: none;
+        }
+        
+        .btn-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .btn-primary-custom {
+            background: var(--gradient-primary);
+            color: white;
+        }
+        
+        .btn-success-custom {
+            background: var(--gradient-success);
+            color: white;
+        }
+        
+        .btn-warning-custom {
+            background: var(--gradient-warning);
+            color: white;
+        }
+        
+        /* Alertas personalizadas */
+        .alert-custom {
+            border: none;
+            border-radius: var(--border-radius);
+            padding: 1rem 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        /* Footer */
+        .footer-custom {
+            background: var(--dark-color);
+            color: white;
+            padding: 2rem 0;
+            margin-top: auto;
+        }
+        
+        /* Utilidades */
+        .text-gradient {
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .bg-gradient-primary {
+            background: var(--gradient-primary);
+        }
+        
+        .bg-gradient-success {
+            background: var(--gradient-success);
+        }
+        
+        .bg-gradient-warning {
+            background: var(--gradient-warning);
+        }
+        
+        /* Animaciones */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .fade-in-up {
+            animation: fadeInUp 0.6s ease-out;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .navbar-nav {
+                text-align: center;
+                margin-top: 1rem;
+            }
+            
+            .main-content {
+                padding: 1rem 0;
+            }
+            
+            .card-custom {
+                margin-bottom: 1rem;
+            }
+        }
+        
+        /* Scrollbar personalizada */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: var(--light-color);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--secondary-color);
+        }
+        
+        /* Notificaciones toast */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+        }
+        
+        .toast-custom {
+            border: none;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        /* Loading spinner */
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Breadcrumb personalizado */
+        .breadcrumb-custom {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 1rem 1.5rem;
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 2rem;
+        }
+        
+        .breadcrumb-custom .breadcrumb-item + .breadcrumb-item::before {
+            content: "›";
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+        
+        /* Sidebar para páginas con navegación lateral */
+        .sidebar-custom {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-md);
+            padding: 2rem;
+            height: fit-content;
+            position: sticky;
+            top: 2rem;
+        }
+        
+        .sidebar-nav .nav-link {
+            color: var(--dark-color);
+            padding: 0.75rem 1rem;
+            border-radius: var(--border-radius);
+            margin-bottom: 0.5rem;
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar-nav .nav-link:hover,
+        .sidebar-nav .nav-link.active {
+            background: var(--gradient-primary);
+            color: white;
+            transform: translateX(5px);
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-custom">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'home' %}">
+                <i class="fas fa-file-code me-2"></i>
+                ParseDoc System
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'dashboard' %}">
+                            <i class="fas fa-tachometer-alt me-1"></i>Dashboard
+                        </a>
+                    </li>
+                    
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-file-upload me-1"></i>Documentos
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{% url 'parser:upload_document' %}">
+                                <i class="fas fa-plus me-2"></i>Subir Documento
+                            </a></li>
+                            <li><a class="dropdown-item" href="{% url 'parser:document_list' %}">
+                                <i class="fas fa-list me-2"></i>Lista de Documentos
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{% url 'parser:processing_queue' %}">
+                                <i class="fas fa-clock me-2"></i>Cola de Procesamiento
+                            </a></li>
+                        </ul>
+                    </li>
+                    
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-layer-group me-1"></i>Plantillas
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{% url 'templates:template_list' %}">
+                                <i class="fas fa-list me-2"></i>Mis Plantillas
+                            </a></li>
+                            <li><a class="dropdown-item" href="{% url 'templates:category_list' %}">
+                                <i class="fas fa-folder me-2"></i>Categorías
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{% url 'templates:search_templates' %}">
+                                <i class="fas fa-search me-2"></i>Buscar Plantillas
+                            </a></li>
+                        </ul>
+                    </li>
+                    
+                    {% if user.is_authenticated and user.is_admin %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-cogs me-1"></i>Administración
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{% url 'admin_dashboard' %}">
+                                <i class="fas fa-chart-bar me-2"></i>Panel de Admin
+                            </a></li>
+                            <li><a class="dropdown-item" href="/admin/">
+                                <i class="fas fa-database me-2"></i>Django Admin
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{% url 'versions:global_version_stats' %}">
+                                <i class="fas fa-code-branch me-2"></i>Estadísticas de Versiones
+                            </a></li>
+                        </ul>
+                    </li>
+                    {% endif %}
+                </ul>
+                
+                <ul class="navbar-nav">
+                    {% if user.is_authenticated %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-user-circle me-1"></i>
+                                {{ user.get_full_name|default:user.username }}
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="{% url 'auth:user_profile' %}">
+                                    <i class="fas fa-user me-2"></i>Mi Perfil
+                                </a></li>
+                                <li><a class="dropdown-item" href="#">
+                                    <i class="fas fa-cog me-2"></i>Configuración
+                                </a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{% url 'auth:user_logout' %}">
+                                    <i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión
+                                </a></li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'auth:user_login' %}">
+                                <i class="fas fa-sign-in-alt me-1"></i>Iniciar Sesión
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'auth:register' %}">
+                                <i class="fas fa-user-plus me-1"></i>Registrarse
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Breadcrumb -->
+    {% block breadcrumb %}{% endblock %}
+    
+    <!-- Contenido principal -->
+    <main class="main-content">
+        <div class="container{% block container_class %}{% endblock %}">
+            <!-- Mensajes del sistema -->
+            {% if messages %}
+                <div class="row">
+                    <div class="col-12">
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-custom alert-dismissible fade show" role="alert">
+                                {% if message.tags == 'success' %}
+                                    <i class="fas fa-check-circle me-2"></i>
+                                {% elif message.tags == 'error' %}
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                {% elif message.tags == 'warning' %}
+                                    <i class="fas fa-exclamation-circle me-2"></i>
+                                {% elif message.tags == 'info' %}
+                                    <i class="fas fa-info-circle me-2"></i>
+                                {% endif %}
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+            
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+    
+    <!-- Footer -->
+    <footer class="footer-custom mt-auto">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5><i class="fas fa-file-code me-2"></i>ParseDoc System</h5>
+                    <p class="mb-0">Sistema avanzado de parseo de documentos a plantillas HTML</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p class="mb-0">
+                        <small>
+                            &copy; {{ current_year|default:"2024" }} ParseDoc System. 
+                            Desarrollado con <i class="fas fa-heart text-danger"></i> usando Django
+                        </small>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- Container para notificaciones toast -->
+    <div class="toast-container"></div>
+    
+    <!-- CSRF Token para AJAX -->
+    {% csrf_token %}
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Scripts personalizados -->
+    <script>
+        // Función para mostrar notificaciones toast
+        function showNotification(message, type = 'info', duration = 5000) {
+            const toastContainer = document.querySelector('.toast-container');
+            const toastId = 'toast-' + Date.now();
+            
+            const iconMap = {
+                'success': 'fas fa-check-circle',
+                'error': 'fas fa-exclamation-triangle',
+                'warning': 'fas fa-exclamation-circle',
+                'info': 'fas fa-info-circle'
+            };
+            
+            const colorMap = {
+                'success': 'text-success',
+                'error': 'text-danger',
+                'warning': 'text-warning',
+                'info': 'text-info'
+            };
+            
+            const toastHtml = `
+                <div id="${toastId}" class="toast toast-custom" role="alert" data-bs-delay="${duration}">
+                    <div class="toast-header">
+                        <i class="${iconMap[type]} ${colorMap[type]} me-2"></i>
+                        <strong class="me-auto">Notificación</strong>
+                        <small class="text-muted">ahora</small>
+                        <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+                    </div>
+                    <div class="toast-body">
+                        ${message}
+                    </div>
+                </div>
+            `;
+            
+            toastContainer.insertAdjacentHTML('beforeend', toastHtml);
+            
+            const toastElement = document.getElementById(toastId);
+            const toast = new bootstrap.Toast(toastElement);
+            toast.show();
+            
+            // Remover el elemento del DOM después de que se oculte
+            toastElement.addEventListener('hidden.bs.toast', function() {
+                toastElement.remove();
+            });
+        }
+        
+        // Función para confirmar acciones
+        function confirmAction(message, callback) {
+            if (confirm(message)) {
+                callback();
+            }
+        }
+        
+        // Función para mostrar loading en botones
+        function showButtonLoading(button, text = 'Cargando...') {
+            const originalText = button.innerHTML;
+            button.innerHTML = `<span class="loading-spinner me-2"></span>${text}`;
+            button.disabled = true;
+            
+            return function() {
+                button.innerHTML = originalText;
+                button.disabled = false;
+            };
+        }
+        
+        // Obtener CSRF token para requests AJAX
+        function getCSRFToken() {
+            return document.querySelector('[name=csrfmiddlewaretoken]').value;
+        }
+        
+        // Formatear fechas
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('es-ES', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+        
+        // Formatear tamaños de archivo
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        // Auto-ocultar alertas después de 5 segundos
+        document.addEventListener('DOMContentLoaded', function() {
+            const alerts = document.querySelectorAll('.alert:not(.alert-permanent)');
+            alerts.forEach(alert => {
+                setTimeout(() => {
+                    const bsAlert = new bootstrap.Alert(alert);
+                    bsAlert.close();
+                }, 5000);
+            });
+        });
+        
+        // Activar tooltips de Bootstrap
+        document.addEventListener('DOMContentLoaded', function() {
+            const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltipTriggerList.map(function(tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        });
+        
+        // Activar popovers de Bootstrap
+        document.addEventListener('DOMContentLoaded', function() {
+            const popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
+            popoverTriggerList.map(function(popoverTriggerEl) {
+                return new bootstrap.Popover(popoverTriggerEl);
+            });
+        });
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

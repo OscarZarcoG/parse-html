@@ -1,0 +1,451 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Registro - Sistema de Parseo{% endblock %}
+
+{% block extra_css %}
+<style>
+    .register-container {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 20px 0;
+    }
+    
+    .register-card {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        width: 100%;
+        max-width: 500px;
+        margin: 0 auto;
+    }
+    
+    .register-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 30px;
+        text-align: center;
+    }
+    
+    .register-header h2 {
+        margin: 0;
+        font-weight: 600;
+    }
+    
+    .register-body {
+        padding: 40px;
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-label {
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 8px;
+        display: block;
+    }
+    
+    .form-control {
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        padding: 12px 15px;
+        font-size: 14px;
+        transition: all 0.3s ease;
+    }
+    
+    .form-control:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+    
+    .form-control.is-invalid {
+        border-color: #dc3545;
+        box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+    }
+    
+    .error-message {
+        color: #dc3545;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+        display: flex;
+        align-items: center;
+    }
+    
+    .error-message i {
+        margin-right: 0.5rem;
+    }
+    
+    .alert-error {
+        background-color: #f8d7da;
+        border-color: #f5c6cb;
+        color: #721c24;
+        border-radius: 0.375rem;
+        padding: 0.75rem 1rem;
+        margin-bottom: 1rem;
+        border: 1px solid transparent;
+    }
+    
+    .alert-error .alert-icon {
+        margin-right: 0.5rem;
+    }
+    
+    .btn-register {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        border-radius: 8px;
+        padding: 12px 30px;
+        font-size: 16px;
+        font-weight: 600;
+        color: white;
+        width: 100%;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-register:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        color: white;
+    }
+    
+    .password-toggle {
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        cursor: pointer;
+        color: #6c757d;
+    }
+    
+    .password-field {
+        position: relative;
+    }
+    
+    .login-link {
+        text-align: center;
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid #e9ecef;
+    }
+    
+    .login-link a {
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 600;
+    }
+    
+    .login-link a:hover {
+        text-decoration: underline;
+    }
+    
+    .password-requirements {
+        font-size: 12px;
+        color: #6c757d;
+        margin-top: 5px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="register-container">
+    <div class="register-card">
+        <div class="register-header">
+            <h2><i class="fas fa-user-plus me-2"></i>Crear Cuenta</h2>
+            <p class="mb-0">Únete al sistema de parseo de documentos</p>
+        </div>
+        
+        <div class="register-body">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags|default:'error' }} alert-dismissible fade show" role="alert">
+                        <i class="fas fa-exclamation-triangle alert-icon"></i>
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+            
+            <form method="post" id="registerForm">
+                {% csrf_token %}
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="first_name" class="form-label">
+                                <i class="fas fa-user me-1"></i>Nombre
+                            </label>
+                            <input type="text" class="form-control" id="first_name" name="first_name" 
+                                   placeholder="Tu nombre" value="{{ request.POST.first_name }}">
+                            <div id="first_name-error" class="error-message" style="display: none;">
+                                <i class="fas fa-exclamation-circle"></i>
+                                <span></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="last_name" class="form-label">
+                                <i class="fas fa-user me-1"></i>Apellido
+                            </label>
+                            <input type="text" class="form-control" id="last_name" name="last_name" 
+                                   placeholder="Tu apellido" value="{{ request.POST.last_name }}">
+                            <div id="last_name-error" class="error-message" style="display: none;">
+                                <i class="fas fa-exclamation-circle"></i>
+                                <span></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="username" class="form-label">
+                        <i class="fas fa-at me-1"></i>Nombre de Usuario *
+                    </label>
+                    <input type="text" class="form-control" id="username" name="username" 
+                           placeholder="Elige un nombre de usuario" required 
+                           value="{{ request.POST.username }}">
+                    <div id="username-error" class="error-message" style="display: none;">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <span></span>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="email" class="form-label">
+                        <i class="fas fa-envelope me-1"></i>Correo Electrónico *
+                    </label>
+                    <input type="email" class="form-control" id="email" name="email" 
+                           placeholder="tu@email.com" required 
+                           value="{{ request.POST.email }}">
+                    <div id="email-error" class="error-message" style="display: none;">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <span></span>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password" class="form-label">
+                        <i class="fas fa-lock me-1"></i>Contraseña *
+                    </label>
+                    <div class="password-field">
+                        <input type="password" class="form-control" id="password" name="password" 
+                               placeholder="Crea una contraseña segura" required>
+                        <i class="fas fa-eye password-toggle" onclick="togglePassword('password')"></i>
+                    </div>
+                    <div class="password-requirements">
+                        Mínimo 8 caracteres. Se recomienda incluir mayúsculas, minúsculas y números.
+                    </div>
+                    <div id="password-error" class="error-message" style="display: none;">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <span></span>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password_confirm" class="form-label">
+                        <i class="fas fa-lock me-1"></i>Confirmar Contraseña *
+                    </label>
+                    <div class="password-field">
+                        <input type="password" class="form-control" id="password_confirm" name="password_confirm" 
+                               placeholder="Repite tu contraseña" required>
+                        <i class="fas fa-eye password-toggle" onclick="togglePassword('password_confirm')"></i>
+                    </div>
+                    <div id="password_confirm-error" class="error-message" style="display: none;">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <span></span>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn btn-register">
+                    <i class="fas fa-user-plus me-2"></i>Crear Cuenta
+                </button>
+            </form>
+            
+            <div class="login-link">
+                <p class="mb-0">¿Ya tienes una cuenta? 
+                    <a href="{% url 'auth:login' %}">Inicia sesión aquí</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function togglePassword(fieldId) {
+    const field = document.getElementById(fieldId);
+    const icon = field.nextElementSibling;
+    
+    if (field.type === 'password') {
+        field.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+    } else {
+        field.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+    }
+}
+
+// Funciones de validación
+function showError(input, errorDiv, message) {
+    input.classList.add('is-invalid');
+    errorDiv.querySelector('span').textContent = message;
+    errorDiv.style.display = 'flex';
+}
+
+function hideError(input, errorDiv) {
+    input.classList.remove('is-invalid');
+    errorDiv.style.display = 'none';
+}
+
+// Validación de email
+function isValidEmail(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+}
+
+// Referencias a elementos
+const registerForm = document.getElementById('registerForm');
+const usernameInput = document.getElementById('username');
+const emailInput = document.getElementById('email');
+const passwordInput = document.getElementById('password');
+const passwordConfirmInput = document.getElementById('password_confirm');
+
+const usernameError = document.getElementById('username-error');
+const emailError = document.getElementById('email-error');
+const passwordError = document.getElementById('password-error');
+const passwordConfirmError = document.getElementById('password_confirm-error');
+
+// Validación del campo username
+usernameInput.addEventListener('blur', function() {
+    if (!this.value.trim()) {
+        showError(this, usernameError, 'El nombre de usuario es obligatorio');
+    } else if (this.value.length < 3) {
+        showError(this, usernameError, 'El nombre de usuario debe tener al menos 3 caracteres');
+    } else {
+        hideError(this, usernameError);
+    }
+});
+
+usernameInput.addEventListener('input', function() {
+    if (this.value.trim() && this.value.length >= 3) {
+        hideError(this, usernameError);
+    }
+});
+
+// Validación del campo email
+emailInput.addEventListener('blur', function() {
+    if (!this.value.trim()) {
+        showError(this, emailError, 'El correo electrónico es obligatorio');
+    } else if (!isValidEmail(this.value)) {
+        showError(this, emailError, 'Por favor ingresa un correo electrónico válido');
+    } else {
+        hideError(this, emailError);
+    }
+});
+
+emailInput.addEventListener('input', function() {
+    if (this.value.trim() && isValidEmail(this.value)) {
+        hideError(this, emailError);
+    }
+});
+
+// Validación del campo password
+passwordInput.addEventListener('blur', function() {
+    if (!this.value.trim()) {
+        showError(this, passwordError, 'La contraseña es obligatoria');
+    } else if (this.value.length < 8) {
+        showError(this, passwordError, 'La contraseña debe tener al menos 8 caracteres');
+    } else {
+        hideError(this, passwordError);
+    }
+});
+
+passwordInput.addEventListener('input', function() {
+    if (this.value.trim() && this.value.length >= 8) {
+        hideError(this, passwordError);
+    }
+    
+    // Revalidar confirmación de contraseña si ya tiene valor
+    if (passwordConfirmInput.value.trim()) {
+        if (this.value === passwordConfirmInput.value) {
+            hideError(passwordConfirmInput, passwordConfirmError);
+        } else {
+            showError(passwordConfirmInput, passwordConfirmError, 'Las contraseñas no coinciden');
+        }
+    }
+});
+
+// Validación del campo password_confirm
+passwordConfirmInput.addEventListener('blur', function() {
+    if (!this.value.trim()) {
+        showError(this, passwordConfirmError, 'Debes confirmar tu contraseña');
+    } else if (this.value !== passwordInput.value) {
+        showError(this, passwordConfirmError, 'Las contraseñas no coinciden');
+    } else {
+        hideError(this, passwordConfirmError);
+    }
+});
+
+passwordConfirmInput.addEventListener('input', function() {
+    if (this.value.trim() && this.value === passwordInput.value) {
+        hideError(this, passwordConfirmError);
+    } else if (this.value.trim() && this.value !== passwordInput.value) {
+        showError(this, passwordConfirmError, 'Las contraseñas no coinciden');
+    }
+});
+
+// Validación al enviar el formulario
+registerForm.addEventListener('submit', function(e) {
+    let hasErrors = false;
+    
+    // Validar username
+    if (!usernameInput.value.trim()) {
+        showError(usernameInput, usernameError, 'El nombre de usuario es obligatorio');
+        hasErrors = true;
+    } else if (usernameInput.value.length < 3) {
+        showError(usernameInput, usernameError, 'El nombre de usuario debe tener al menos 3 caracteres');
+        hasErrors = true;
+    }
+    
+    // Validar email
+    if (!emailInput.value.trim()) {
+        showError(emailInput, emailError, 'El correo electrónico es obligatorio');
+        hasErrors = true;
+    } else if (!isValidEmail(emailInput.value)) {
+        showError(emailInput, emailError, 'Por favor ingresa un correo electrónico válido');
+        hasErrors = true;
+    }
+    
+    // Validar password
+    if (!passwordInput.value.trim()) {
+        showError(passwordInput, passwordError, 'La contraseña es obligatoria');
+        hasErrors = true;
+    } else if (passwordInput.value.length < 8) {
+        showError(passwordInput, passwordError, 'La contraseña debe tener al menos 8 caracteres');
+        hasErrors = true;
+    }
+    
+    // Validar password_confirm
+    if (!passwordConfirmInput.value.trim()) {
+        showError(passwordConfirmInput, passwordConfirmError, 'Debes confirmar tu contraseña');
+        hasErrors = true;
+    } else if (passwordConfirmInput.value !== passwordInput.value) {
+        showError(passwordConfirmInput, passwordConfirmError, 'Las contraseñas no coinciden');
+        hasErrors = true;
+    }
+    
+    if (hasErrors) {
+        e.preventDefault();
+        return false;
+    }
+});
+</script>
+{% endblock %}

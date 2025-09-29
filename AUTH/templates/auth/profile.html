@@ -1,0 +1,387 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load math_filters %}
+
+{% block title %}Mi Perfil - Sistema de Parseo{% endblock %}
+
+{% block extra_css %}
+<style>
+    .profile-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 40px 0;
+        margin-bottom: 30px;
+    }
+    
+    .profile-avatar {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 48px;
+        margin: 0 auto 20px;
+        border: 4px solid rgba(255, 255, 255, 0.3);
+    }
+    
+    .stats-card {
+        background: white;
+        border-radius: 15px;
+        padding: 25px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        margin-bottom: 20px;
+        border-left: 4px solid #667eea;
+    }
+    
+    .stats-number {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #667eea;
+    }
+    
+    .stats-label {
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+    
+    .form-section {
+        background: white;
+        border-radius: 15px;
+        padding: 30px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        margin-bottom: 30px;
+    }
+    
+    .section-title {
+        color: #495057;
+        margin-bottom: 25px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #e9ecef;
+    }
+    
+    .form-control {
+        border: 2px solid #e9ecef;
+        border-radius: 10px;
+        padding: 12px 15px;
+        transition: all 0.3s ease;
+    }
+    
+    .form-control:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        border-radius: 10px;
+        padding: 12px 30px;
+        font-weight: 600;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+    
+    .storage-progress {
+        height: 10px;
+        border-radius: 5px;
+        overflow: hidden;
+        background-color: #e9ecef;
+    }
+    
+    .storage-bar {
+        height: 100%;
+        background: linear-gradient(90deg, #28a745 0%, #ffc107 70%, #dc3545 100%);
+        transition: width 0.3s ease;
+    }
+    
+    .password-toggle {
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        cursor: pointer;
+        color: #6c757d;
+    }
+    
+    .password-field {
+        position: relative;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="profile-header">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-3 text-center">
+                <div class="profile-avatar">
+                    <i class="fas fa-user"></i>
+                </div>
+            </div>
+            <div class="col-md-9">
+                <h1 class="mb-2">{{ user.get_full_name|default:user.username }}</h1>
+                <p class="mb-1"><i class="fas fa-envelope me-2"></i>{{ user.email }}</p>
+                <p class="mb-1"><i class="fas fa-user-tag me-2"></i>{{ user.get_role_display }}</p>
+                <p class="mb-0"><i class="fas fa-calendar me-2"></i>Miembro desde {{ user.date_joined|date:"d/m/Y" }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+    
+    <!-- Estadísticas del Usuario -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stats-card text-center">
+                <div class="stats-number">{{ user_stats.total_documents }}</div>
+                <div class="stats-label">Documentos Subidos</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card text-center">
+                <div class="stats-number">{{ user_stats.total_templates }}</div>
+                <div class="stats-label">Plantillas Creadas</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card text-center">
+                <div class="stats-number">{{ user_stats.documents_this_month }}</div>
+                <div class="stats-label">Este Mes</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card text-center">
+                <div class="stats-number">{{ user_stats.storage_used|filesizeformat }}</div>
+                <div class="stats-label">Almacenamiento Usado</div>
+                <div class="storage-progress mt-2">
+                    <div class="storage-bar" style="width: {{ user_stats.storage_used|percentage:1073741824|floatformat:1 }}%"></div>
+                </div>
+                <small class="text-muted">{{ user_stats.storage_used|percentage:1073741824|floatformat:1 }}% de 1GB</small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-8">
+            <!-- Información Personal -->
+            <div class="form-section">
+                <h3 class="section-title">
+                    <i class="fas fa-user me-2"></i>Información Personal
+                </h3>
+                
+                <form method="post" id="profileForm">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="first_name" class="form-label">Nombre</label>
+                                <input type="text" class="form-control" id="first_name" name="first_name" 
+                                       value="{{ user.first_name }}" placeholder="Tu nombre">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="last_name" class="form-label">Apellido</label>
+                                <input type="text" class="form-control" id="last_name" name="last_name" 
+                                       value="{{ user.last_name }}" placeholder="Tu apellido">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Correo Electrónico</label>
+                        <input type="email" class="form-control" id="email" name="email" 
+                               value="{{ user.email }}" placeholder="tu@email.com" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Nombre de Usuario</label>
+                        <input type="text" class="form-control" value="{{ user.username }}" disabled>
+                        <small class="text-muted">El nombre de usuario no se puede cambiar</small>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i>Guardar Cambios
+                    </button>
+                </form>
+            </div>
+            
+            <!-- Cambiar Contraseña -->
+            <div class="form-section">
+                <h3 class="section-title">
+                    <i class="fas fa-lock me-2"></i>Cambiar Contraseña
+                </h3>
+                
+                <form method="post" id="passwordForm">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="current_password" class="form-label">Contraseña Actual</label>
+                        <div class="password-field">
+                            <input type="password" class="form-control" id="current_password" name="current_password" 
+                                   placeholder="Tu contraseña actual">
+                            <i class="fas fa-eye password-toggle" onclick="togglePassword('current_password')"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="new_password" class="form-label">Nueva Contraseña</label>
+                        <div class="password-field">
+                            <input type="password" class="form-control" id="new_password" name="new_password" 
+                                   placeholder="Nueva contraseña (mínimo 8 caracteres)">
+                            <i class="fas fa-eye password-toggle" onclick="togglePassword('new_password')"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="confirm_password" class="form-label">Confirmar Nueva Contraseña</label>
+                        <div class="password-field">
+                            <input type="password" class="form-control" id="confirm_password" name="confirm_password" 
+                                   placeholder="Repite la nueva contraseña">
+                            <i class="fas fa-eye password-toggle" onclick="togglePassword('confirm_password')"></i>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-key me-2"></i>Cambiar Contraseña
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <!-- Información de la Cuenta -->
+            <div class="form-section">
+                <h3 class="section-title">
+                    <i class="fas fa-info-circle me-2"></i>Información de la Cuenta
+                </h3>
+                
+                <div class="mb-3">
+                    <strong>Rol:</strong>
+                    <span class="badge bg-primary ms-2">{{ user.get_role_display }}</span>
+                </div>
+                
+                <div class="mb-3">
+                    <strong>Estado:</strong>
+                    {% if user.is_active %}
+                        <span class="badge bg-success ms-2">Activo</span>
+                    {% else %}
+                        <span class="badge bg-danger ms-2">Inactivo</span>
+                    {% endif %}
+                </div>
+                
+                <div class="mb-3">
+                    <strong>Último acceso:</strong>
+                    <div class="text-muted">{{ user.last_login|date:"d/m/Y H:i"|default:"Nunca" }}</div>
+                </div>
+                
+                <div class="mb-3">
+                    <strong>Fecha de registro:</strong>
+                    <div class="text-muted">{{ user.date_joined|date:"d/m/Y H:i" }}</div>
+                </div>
+            </div>
+            
+            <!-- Acciones Rápidas -->
+            <div class="form-section">
+                <h3 class="section-title">
+                    <i class="fas fa-bolt me-2"></i>Acciones Rápidas
+                </h3>
+                
+                <div class="d-grid gap-2">
+                    <a href="{% url 'parser:upload_document' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-upload me-2"></i>Subir Documento
+                    </a>
+                    
+                    <a href="{% url 'parser:document_list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-file-alt me-2"></i>Mis Documentos
+                    </a>
+                    
+                    <a href="{% url 'dashboard' %}" class="btn btn-outline-info">
+                        <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function togglePassword(fieldId) {
+    const field = document.getElementById(fieldId);
+    const icon = field.nextElementSibling;
+    
+    if (field.type === 'password') {
+        field.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+    } else {
+        field.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+    }
+}
+
+// Validación del formulario de contraseña
+document.getElementById('passwordForm').addEventListener('submit', function(e) {
+    const currentPassword = document.getElementById('current_password').value;
+    const newPassword = document.getElementById('new_password').value;
+    const confirmPassword = document.getElementById('confirm_password').value;
+    
+    // Solo validar si se está intentando cambiar la contraseña
+    if (newPassword || confirmPassword || currentPassword) {
+        if (!currentPassword) {
+            e.preventDefault();
+            alert('Debes ingresar tu contraseña actual.');
+            return false;
+        }
+        
+        if (!newPassword) {
+            e.preventDefault();
+            alert('Debes ingresar una nueva contraseña.');
+            return false;
+        }
+        
+        if (newPassword.length < 8) {
+            e.preventDefault();
+            alert('La nueva contraseña debe tener al menos 8 caracteres.');
+            return false;
+        }
+        
+        if (newPassword !== confirmPassword) {
+            e.preventDefault();
+            alert('Las contraseñas no coinciden.');
+            return false;
+        }
+    } else {
+        // Si no hay campos de contraseña, prevenir el envío
+        e.preventDefault();
+        return false;
+    }
+});
+
+// Separar los formularios
+document.getElementById('profileForm').addEventListener('submit', function(e) {
+    // Limpiar campos de contraseña para que no se envíen
+    document.getElementById('current_password').value = '';
+    document.getElementById('new_password').value = '';
+    document.getElementById('confirm_password').value = '';
+});
+</script>
+{% endblock %}

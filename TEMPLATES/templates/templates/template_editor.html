@@ -1,0 +1,1005 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Editor de Plantilla - {{ template.name }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/monokai.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/show-hint.min.css">
+<style>
+    .editor-container {
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .editor-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 15px 0;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    .editor-toolbar {
+        background: #f8f9fa;
+        border-bottom: 1px solid #e9ecef;
+        padding: 10px 0;
+    }
+    
+    .editor-content {
+        flex: 1;
+        display: flex;
+        overflow: hidden;
+    }
+    
+    .editor-sidebar {
+        width: 300px;
+        background: white;
+        border-right: 1px solid #e9ecef;
+        overflow-y: auto;
+    }
+    
+    .editor-main {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .editor-tabs {
+        background: #f8f9fa;
+        border-bottom: 1px solid #e9ecef;
+        display: flex;
+    }
+    
+    .editor-tab {
+        background: none;
+        border: none;
+        padding: 12px 20px;
+        color: #6c757d;
+        font-weight: 500;
+        border-bottom: 3px solid transparent;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    
+    .editor-tab.active {
+        color: #667eea;
+        border-bottom-color: #667eea;
+        background: white;
+    }
+    
+    .editor-tab:hover:not(.active) {
+        color: #495057;
+        background: #e9ecef;
+    }
+    
+    .editor-pane {
+        flex: 1;
+        position: relative;
+    }
+    
+    .CodeMirror {
+        height: 100%;
+        font-size: 14px;
+        line-height: 1.5;
+    }
+    
+    .sidebar-section {
+        padding: 20px;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .sidebar-title {
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+    }
+    
+    .placeholder-list {
+        max-height: 200px;
+        overflow-y: auto;
+    }
+    
+    .placeholder-item {
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 6px;
+        padding: 10px;
+        margin-bottom: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .placeholder-item:hover {
+        background: #e9ecef;
+        border-color: #667eea;
+    }
+    
+    .placeholder-name {
+        font-weight: 600;
+        color: #667eea;
+        font-family: 'Courier New', monospace;
+        font-size: 0.9rem;
+    }
+    
+    .placeholder-type {
+        font-size: 0.8rem;
+        color: #6c757d;
+        text-transform: uppercase;
+    }
+    
+    .version-info {
+        background: #e3f2fd;
+        border: 1px solid #bbdefb;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 15px;
+    }
+    
+    .version-number {
+        font-weight: 600;
+        color: #1976d2;
+    }
+    
+    .version-status {
+        font-size: 0.8rem;
+        padding: 2px 8px;
+        border-radius: 12px;
+        text-transform: uppercase;
+    }
+    
+    .status-draft {
+        background: #fff3e0;
+        color: #f57c00;
+    }
+    
+    .status-committed {
+        background: #e8f5e8;
+        color: #2e7d32;
+    }
+    
+    .btn-toolbar {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+    
+    .btn-editor {
+        border-radius: 6px;
+        font-weight: 500;
+        padding: 8px 16px;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-editor:hover {
+        transform: translateY(-1px);
+    }
+    
+    .save-indicator {
+        display: none;
+        align-items: center;
+        color: #28a745;
+        font-size: 0.9rem;
+    }
+    
+    .save-indicator.saving {
+        color: #ffc107;
+    }
+    
+    .save-indicator.error {
+        color: #dc3545;
+    }
+    
+    .preview-container {
+        background: white;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    
+    .preview-toolbar {
+        background: #f8f9fa;
+        border-bottom: 1px solid #e9ecef;
+        padding: 10px 15px;
+        display: flex;
+        justify-content: between;
+        align-items: center;
+    }
+    
+    .preview-frame {
+        width: 100%;
+        height: 400px;
+        border: none;
+    }
+    
+    .changes-list {
+        max-height: 300px;
+        overflow-y: auto;
+    }
+    
+    .change-item {
+        padding: 10px;
+        border-bottom: 1px solid #e9ecef;
+        font-family: 'Courier New', monospace;
+        font-size: 0.9rem;
+    }
+    
+    .change-added {
+        background: #d4edda;
+        color: #155724;
+    }
+    
+    .change-removed {
+        background: #f8d7da;
+        color: #721c24;
+    }
+    
+    .change-modified {
+        background: #fff3cd;
+        color: #856404;
+    }
+    
+    .floating-save {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 1000;
+        display: none;
+    }
+    
+    .commit-form {
+        background: white;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        padding: 20px;
+        margin-top: 15px;
+    }
+    
+    .branch-selector {
+        margin-bottom: 15px;
+    }
+    
+    .branch-option {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+    
+    .branch-option input[type="radio"] {
+        margin-right: 10px;
+    }
+    
+    .new-branch-input {
+        margin-left: 25px;
+        margin-top: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="editor-container">
+    <!-- Header del Editor -->
+    <div class="editor-header">
+        <div class="container-fluid">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <h4 class="mb-0">
+                        <i class="fas fa-edit me-2"></i>
+                        {{ template.name }}
+                    </h4>
+                    <small class="opacity-75">{{ template.document.original_filename }}</small>
+                </div>
+                <div class="col-md-6 text-end">
+                    <div class="version-info d-inline-block">
+                        <span class="version-number">v{{ current_version.version_number }}</span>
+                        <span class="version-status status-{{ current_version.status }}">
+                            {{ current_version.get_status_display }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toolbar del Editor -->
+    <div class="editor-toolbar">
+        <div class="container-fluid">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <div class="btn-toolbar">
+                        <button class="btn btn-success btn-editor" onclick="saveChanges()">
+                            <i class="fas fa-save me-2"></i>Guardar
+                        </button>
+                        
+                        <button class="btn btn-primary btn-editor" onclick="showPreview()">
+                            <i class="fas fa-eye me-2"></i>Vista Previa
+                        </button>
+                        
+                        <button class="btn btn-info btn-editor" onclick="showCommitModal()">
+                            <i class="fas fa-code-branch me-2"></i>Confirmar Cambios
+                        </button>
+                        
+                        <button class="btn btn-warning btn-editor" onclick="showVersionHistory()">
+                            <i class="fas fa-history me-2"></i>Historial
+                        </button>
+                        
+                        <button class="btn btn-outline-secondary btn-editor" onclick="formatCode()">
+                            <i class="fas fa-magic me-2"></i>Formatear
+                        </button>
+                        
+                        <button class="btn btn-outline-danger btn-editor" onclick="revertChanges()">
+                            <i class="fas fa-undo me-2"></i>Revertir
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-4 text-end">
+                    <div class="save-indicator" id="saveIndicator">
+                        <i class="fas fa-check-circle me-2"></i>
+                        <span>Guardado automáticamente</span>
+                    </div>
+                    
+                    <a href="{% url 'parser:document_detail' template.document.id %}" class="btn btn-outline-secondary btn-editor">
+                        <i class="fas fa-arrow-left me-2"></i>Volver
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Contenido del Editor -->
+    <div class="editor-content">
+        <!-- Sidebar -->
+        <div class="editor-sidebar">
+            <!-- Información de la Plantilla -->
+            <div class="sidebar-section">
+                <div class="sidebar-title">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Información
+                </div>
+                <div class="mb-2">
+                    <strong>Documento:</strong><br>
+                    <small class="text-muted">{{ template.document.name }}</small>
+                </div>
+                <div class="mb-2">
+                    <strong>Última modificación:</strong><br>
+                    <small class="text-muted">{{ template.updated_at|date:"d/m/Y H:i" }}</small>
+                </div>
+                <div class="mb-2">
+                    <strong>Placeholders:</strong><br>
+                    <small class="text-muted">{{ placeholders|length }} detectados</small>
+                </div>
+            </div>
+            
+            <!-- Lista de Placeholders -->
+            <div class="sidebar-section">
+                <div class="sidebar-title">
+                    <i class="fas fa-tags me-2"></i>
+                    Placeholders
+                    <button class="btn btn-sm btn-outline-primary ms-auto" onclick="refreshPlaceholders()">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </div>
+                <div class="placeholder-list" id="placeholderList">
+                    {% for placeholder in placeholders %}
+                        <div class="placeholder-item" onclick="insertPlaceholder('{{ placeholder.name }}')">
+                            <div class="placeholder-name">{{ "{{" }}{{ placeholder.name }}{{ "}}" }}</div>
+                            <div class="placeholder-type">{{ placeholder.get_data_type_display }}</div>
+                        </div>
+                    {% endfor %}
+                </div>
+                
+                <button class="btn btn-sm btn-outline-success w-100 mt-2" onclick="showAddPlaceholderModal()">
+                    <i class="fas fa-plus me-2"></i>Agregar Placeholder
+                </button>
+            </div>
+            
+            <!-- Cambios Pendientes -->
+            <div class="sidebar-section">
+                <div class="sidebar-title">
+                    <i class="fas fa-edit me-2"></i>
+                    Cambios Pendientes
+                </div>
+                <div class="changes-list" id="changesList">
+                    <div class="text-muted text-center py-3">
+                        <i class="fas fa-check-circle"></i><br>
+                        No hay cambios pendientes
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Editor Principal -->
+        <div class="editor-main">
+            <!-- Tabs del Editor -->
+            <div class="editor-tabs">
+                <button class="editor-tab active" onclick="switchTab('html')">
+                    <i class="fab fa-html5 me-2"></i>HTML
+                </button>
+                <button class="editor-tab" onclick="switchTab('css')">
+                    <i class="fab fa-css3-alt me-2"></i>CSS
+                </button>
+                <button class="editor-tab" onclick="switchTab('js')">
+                    <i class="fab fa-js-square me-2"></i>JavaScript
+                </button>
+            </div>
+            
+            <!-- Paneles del Editor -->
+            <div class="editor-pane" id="htmlPane">
+                <textarea id="htmlEditor">{{ template.html_content }}</textarea>
+            </div>
+            
+            <div class="editor-pane" id="cssPane" style="display: none;">
+                <textarea id="cssEditor">{{ template.css_content }}</textarea>
+            </div>
+            
+            <div class="editor-pane" id="jsPane" style="display: none;">
+                <textarea id="jsEditor">{{ template.js_content }}</textarea>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Botón de Guardado Flotante -->
+<div class="floating-save" id="floatingSave">
+    <button class="btn btn-success btn-lg" onclick="saveChanges()">
+        <i class="fas fa-save me-2"></i>Guardar Cambios
+    </button>
+</div>
+
+<!-- Modal de Vista Previa -->
+<div class="modal fade" id="previewModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-eye me-2"></i>Vista Previa de la Plantilla
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-0">
+                <div class="preview-container">
+                    <div class="preview-toolbar">
+                        <div>
+                            <button class="btn btn-sm btn-outline-primary" onclick="refreshPreview()">
+                                <i class="fas fa-sync-alt me-1"></i>Actualizar
+                            </button>
+                            <button class="btn btn-sm btn-outline-success" onclick="openPreviewInNewTab()">
+                                <i class="fas fa-external-link-alt me-1"></i>Abrir en Nueva Pestaña
+                            </button>
+                        </div>
+                        <div>
+                            <select class="form-select form-select-sm" id="previewMode">
+                                <option value="desktop">Escritorio</option>
+                                <option value="tablet">Tablet</option>
+                                <option value="mobile">Móvil</option>
+                            </select>
+                        </div>
+                    </div>
+                    <iframe class="preview-frame" id="previewFrame"></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmación de Cambios -->
+<div class="modal fade" id="commitModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-code-branch me-2"></i>Confirmar Cambios
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="commitForm">
+                    <div class="branch-selector">
+                        <label class="form-label">Seleccionar rama:</label>
+                        <div class="branch-option">
+                            <input type="radio" name="branch_option" value="current" id="currentBranch" checked>
+                            <label for="currentBranch">Rama actual ({{ current_version.branch_name|default:"main" }})</label>
+                        </div>
+                        <div class="branch-option">
+                            <input type="radio" name="branch_option" value="new" id="newBranch">
+                            <label for="newBranch">Crear nueva rama</label>
+                            <div class="new-branch-input" style="display: none;">
+                                <input type="text" class="form-control form-control-sm" 
+                                       name="new_branch_name" placeholder="Nombre de la nueva rama">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="commitMessage" class="form-label">Mensaje de confirmación:</label>
+                        <textarea class="form-control" id="commitMessage" name="commit_message" 
+                                  rows="3" placeholder="Describe los cambios realizados..."></textarea>
+                    </div>
+                    
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="createTag" name="create_tag">
+                        <label class="form-check-label" for="createTag">
+                            Crear etiqueta de versión
+                        </label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="commitChanges()">
+                    <i class="fas fa-check me-2"></i>Confirmar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Agregar Placeholder -->
+<div class="modal fade" id="addPlaceholderModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-plus me-2"></i>Agregar Placeholder
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="placeholderForm">
+                    <div class="mb-3">
+                        <label for="placeholderName" class="form-label">Nombre del Placeholder:</label>
+                        <input type="text" class="form-control" id="placeholderName" 
+                               placeholder="ej: nombre_cliente" required>
+                        <div class="form-text">Solo letras, números y guiones bajos</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="placeholderType" class="form-label">Tipo de Dato:</label>
+                        <select class="form-select" id="placeholderType">
+                            <option value="text">Texto</option>
+                            <option value="number">Número</option>
+                            <option value="date">Fecha</option>
+                            <option value="email">Email</option>
+                            <option value="url">URL</option>
+                            <option value="boolean">Booleano</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="placeholderDescription" class="form-label">Descripción (opcional):</label>
+                        <textarea class="form-control" id="placeholderDescription" 
+                                  rows="2" placeholder="Describe para qué se usa este placeholder..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="addPlaceholder()">
+                    <i class="fas fa-plus me-2"></i>Agregar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/xml/xml.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/css/css.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/javascript/javascript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/show-hint.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/xml-hint.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/css-hint.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/javascript-hint.min.js"></script>
+
+<script>
+let htmlEditor, cssEditor, jsEditor;
+let currentTab = 'html';
+let hasUnsavedChanges = false;
+let autoSaveInterval;
+
+// Inicializar editores CodeMirror
+document.addEventListener('DOMContentLoaded', function() {
+    // Editor HTML
+    htmlEditor = CodeMirror.fromTextArea(document.getElementById('htmlEditor'), {
+        mode: 'xml',
+        theme: 'monokai',
+        lineNumbers: true,
+        autoCloseTags: true,
+        extraKeys: {"Ctrl-Space": "autocomplete"},
+        indentUnit: 2,
+        tabSize: 2,
+        lineWrapping: true
+    });
+    
+    // Editor CSS
+    cssEditor = CodeMirror.fromTextArea(document.getElementById('cssEditor'), {
+        mode: 'css',
+        theme: 'monokai',
+        lineNumbers: true,
+        autoCloseBrackets: true,
+        extraKeys: {"Ctrl-Space": "autocomplete"},
+        indentUnit: 2,
+        tabSize: 2,
+        lineWrapping: true
+    });
+    
+    // Editor JavaScript
+    jsEditor = CodeMirror.fromTextArea(document.getElementById('jsEditor'), {
+        mode: 'javascript',
+        theme: 'monokai',
+        lineNumbers: true,
+        autoCloseBrackets: true,
+        extraKeys: {"Ctrl-Space": "autocomplete"},
+        indentUnit: 2,
+        tabSize: 2,
+        lineWrapping: true
+    });
+    
+    // Detectar cambios
+    [htmlEditor, cssEditor, jsEditor].forEach(editor => {
+        editor.on('change', function() {
+            markAsChanged();
+        });
+    });
+    
+    // Auto-guardado cada 30 segundos
+    autoSaveInterval = setInterval(autoSave, 30000);
+    
+    // Configurar eventos de rama
+    document.querySelectorAll('input[name="branch_option"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            const newBranchInput = document.querySelector('.new-branch-input');
+            if (this.value === 'new') {
+                newBranchInput.style.display = 'block';
+            } else {
+                newBranchInput.style.display = 'none';
+            }
+        });
+    });
+});
+
+function switchTab(tab) {
+    // Ocultar todos los paneles
+    document.querySelectorAll('.editor-pane').forEach(pane => {
+        pane.style.display = 'none';
+    });
+    
+    // Remover clase active de todos los tabs
+    document.querySelectorAll('.editor-tab').forEach(tabBtn => {
+        tabBtn.classList.remove('active');
+    });
+    
+    // Mostrar panel seleccionado
+    document.getElementById(tab + 'Pane').style.display = 'block';
+    
+    // Activar tab seleccionado
+    event.target.classList.add('active');
+    
+    // Refrescar editor correspondiente
+    setTimeout(() => {
+        if (tab === 'html') htmlEditor.refresh();
+        else if (tab === 'css') cssEditor.refresh();
+        else if (tab === 'js') jsEditor.refresh();
+    }, 100);
+    
+    currentTab = tab;
+}
+
+function markAsChanged() {
+    hasUnsavedChanges = true;
+    document.getElementById('floatingSave').style.display = 'block';
+    updateChangesList();
+}
+
+function updateChangesList() {
+    // Aquí podrías implementar lógica para mostrar cambios específicos
+    const changesList = document.getElementById('changesList');
+    changesList.innerHTML = `
+        <div class="change-item change-modified">
+            <i class="fas fa-edit me-2"></i>
+            Archivo ${currentTab.toUpperCase()} modificado
+        </div>
+    `;
+}
+
+function saveChanges() {
+    const saveIndicator = document.getElementById('saveIndicator');
+    saveIndicator.style.display = 'flex';
+    saveIndicator.className = 'save-indicator saving';
+    saveIndicator.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i><span>Guardando...</span>';
+    
+    const data = {
+        html_content: htmlEditor.getValue(),
+        css_content: cssEditor.getValue(),
+        js_content: jsEditor.getValue(),
+        csrfmiddlewaretoken: document.querySelector('[name=csrfmiddlewaretoken]').value
+    };
+    
+    fetch('{% url "templates:save_template" template.id %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': data.csrfmiddlewaretoken
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            hasUnsavedChanges = false;
+            document.getElementById('floatingSave').style.display = 'none';
+            saveIndicator.className = 'save-indicator';
+            saveIndicator.innerHTML = '<i class="fas fa-check-circle me-2"></i><span>Guardado automáticamente</span>';
+            
+            // Actualizar lista de placeholders si es necesario
+            if (data.placeholders_updated) {
+                refreshPlaceholders();
+            }
+            
+            setTimeout(() => {
+                saveIndicator.style.display = 'none';
+            }, 3000);
+        } else {
+            saveIndicator.className = 'save-indicator error';
+            saveIndicator.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i><span>Error al guardar</span>';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        saveIndicator.className = 'save-indicator error';
+        saveIndicator.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i><span>Error al guardar</span>';
+    });
+}
+
+function autoSave() {
+    if (hasUnsavedChanges) {
+        saveChanges();
+    }
+}
+
+function showPreview() {
+    const modal = new bootstrap.Modal(document.getElementById('previewModal'));
+    modal.show();
+    
+    // Generar vista previa
+    refreshPreview();
+}
+
+function refreshPreview() {
+    const previewFrame = document.getElementById('previewFrame');
+    const htmlContent = htmlEditor.getValue();
+    const cssContent = cssEditor.getValue();
+    const jsContent = jsEditor.getValue();
+    
+    // Crear documento HTML completo para la vista previa
+    const fullHtml = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <style>${cssContent}</style>
+        </head>
+        <body>
+            ${htmlContent}
+            <script>${jsContent}</script>
+        </body>
+        </html>
+    `;
+    
+    previewFrame.srcdoc = fullHtml;
+}
+
+function openPreviewInNewTab() {
+    const htmlContent = htmlEditor.getValue();
+    const cssContent = cssEditor.getValue();
+    const jsContent = jsEditor.getValue();
+    
+    const fullHtml = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <style>${cssContent}</style>
+        </head>
+        <body>
+            ${htmlContent}
+            <script>${jsContent}</script>
+        </body>
+        </html>
+    `;
+    
+    const newWindow = window.open();
+    newWindow.document.write(fullHtml);
+    newWindow.document.close();
+}
+
+function showCommitModal() {
+    if (!hasUnsavedChanges) {
+        alert('No hay cambios para confirmar.');
+        return;
+    }
+    
+    const modal = new bootstrap.Modal(document.getElementById('commitModal'));
+    modal.show();
+}
+
+function commitChanges() {
+    const form = document.getElementById('commitForm');
+    const formData = new FormData(form);
+    
+    // Agregar contenido de los editores
+    formData.append('html_content', htmlEditor.getValue());
+    formData.append('css_content', cssEditor.getValue());
+    formData.append('js_content', jsEditor.getValue());
+    formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+    
+    fetch('{% url "versions:commit_version" template.id %}', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            bootstrap.Modal.getInstance(document.getElementById('commitModal')).hide();
+            alert('Cambios confirmados exitosamente.');
+            // Recargar la página para mostrar la nueva versión
+            window.location.reload();
+        } else {
+            alert('Error al confirmar cambios: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error al confirmar cambios.');
+    });
+}
+
+function insertPlaceholder(placeholderName) {
+    const placeholder = `{{${placeholderName}}}`;
+    const editor = getCurrentEditor();
+    
+    if (editor) {
+        const cursor = editor.getCursor();
+        editor.replaceRange(placeholder, cursor);
+        editor.focus();
+    }
+}
+
+function getCurrentEditor() {
+    switch (currentTab) {
+        case 'html': return htmlEditor;
+        case 'css': return cssEditor;
+        case 'js': return jsEditor;
+        default: return htmlEditor;
+    }
+}
+
+function formatCode() {
+    const editor = getCurrentEditor();
+    if (editor) {
+        // Formatear código (implementación básica)
+        const formatted = editor.getValue();
+        editor.setValue(formatted);
+        markAsChanged();
+    }
+}
+
+function revertChanges() {
+    if (confirm('¿Estás seguro de que deseas revertir todos los cambios no guardados?')) {
+        // Recargar contenido original
+        location.reload();
+    }
+}
+
+function showAddPlaceholderModal() {
+    const modal = new bootstrap.Modal(document.getElementById('addPlaceholderModal'));
+    modal.show();
+}
+
+function addPlaceholder() {
+    const name = document.getElementById('placeholderName').value;
+    const type = document.getElementById('placeholderType').value;
+    const description = document.getElementById('placeholderDescription').value;
+    
+    if (!name) {
+        alert('El nombre del placeholder es requerido.');
+        return;
+    }
+    
+    // Validar nombre del placeholder
+    if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(name)) {
+        alert('El nombre del placeholder solo puede contener letras, números y guiones bajos, y debe comenzar con una letra o guión bajo.');
+        return;
+    }
+    
+    const data = {
+        name: name,
+        data_type: type,
+        description: description,
+        csrfmiddlewaretoken: document.querySelector('[name=csrfmiddlewaretoken]').value
+    };
+    
+    fetch('{% url "templates:add_placeholder" template.id %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': data.csrfmiddlewaretoken
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            bootstrap.Modal.getInstance(document.getElementById('addPlaceholderModal')).hide();
+            refreshPlaceholders();
+            // Limpiar formulario
+            document.getElementById('placeholderForm').reset();
+        } else {
+            alert('Error al agregar placeholder: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error al agregar placeholder.');
+    });
+}
+
+function refreshPlaceholders() {
+    fetch(`{% url "templates:get_placeholders" template.id %}`)
+    .then(response => response.json())
+    .then(data => {
+        const placeholderList = document.getElementById('placeholderList');
+        placeholderList.innerHTML = '';
+        
+        data.placeholders.forEach(placeholder => {
+            const item = document.createElement('div');
+            item.className = 'placeholder-item';
+            item.onclick = () => insertPlaceholder(placeholder.name);
+            item.innerHTML = `
+                <div class="placeholder-name">{{${placeholder.name}}}</div>
+                <div class="placeholder-type">${placeholder.data_type}</div>
+            `;
+            placeholderList.appendChild(item);
+        });
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+}
+
+function showVersionHistory() {
+    window.open(`{% url "versions:version_history" template.id %}`, '_blank');
+}
+
+// Prevenir pérdida de cambios al cerrar
+window.addEventListener('beforeunload', function(e) {
+    if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = '';
+    }
+});
+
+// Atajos de teclado
+document.addEventListener('keydown', function(e) {
+    if (e.ctrlKey || e.metaKey) {
+        switch (e.key) {
+            case 's':
+                e.preventDefault();
+                saveChanges();
+                break;
+            case 'p':
+                e.preventDefault();
+                showPreview();
+                break;
+        }
+    }
+});
+</script>
+{% endblock %}
