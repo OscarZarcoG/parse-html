@@ -288,13 +288,22 @@ class DocumentParserService:
     
     def _generate_html_from_docx(self, content_data: Dict) -> str:
         """
-        Genera HTML a partir de datos extraídos de DOCX
+        Genera HTML completo con CSS y JS embebidos a partir de datos extraídos de DOCX
         """
+        # Generar CSS embebido
+        css_content = self._generate_css_from_docx(content_data)
+        js_content = self._generate_js_template()
+        
         html_parts = ['<!DOCTYPE html>', '<html lang="es">', '<head>']
         html_parts.append('<meta charset="UTF-8">')
         html_parts.append('<meta name="viewport" content="width=device-width, initial-scale=1.0">')
         html_parts.append('<title>Plantilla de Documento</title>')
-        html_parts.append('<link rel="stylesheet" href="styles.css">')
+        
+        # Embeber CSS
+        html_parts.append('<style>')
+        html_parts.append(css_content)
+        html_parts.append('</style>')
+        
         html_parts.extend(['</head>', '<body>', '<div class="document-container">'])
         
         # Generar párrafos
@@ -305,20 +314,36 @@ class DocumentParserService:
         for table in content_data['tables']:
             html_parts.append(self._table_to_html(table))
         
-        html_parts.extend(['</div>', '<script src="script.js"></script>', '</body>', '</html>'])
+        html_parts.append('</div>')
+        
+        # Embeber JavaScript
+        html_parts.append('<script>')
+        html_parts.append(js_content)
+        html_parts.append('</script>')
+        
+        html_parts.extend(['</body>', '</html>'])
         
         return '\n'.join(html_parts)
     
     def _generate_html_from_excel(self, content_data: Dict) -> str:
         """
-        Genera HTML a partir de datos extraídos de Excel
+        Genera HTML completo con CSS y JS embebidos a partir de datos extraídos de Excel
         """
+        # Generar CSS y JS embebidos
+        css_content = self._generate_css_from_excel(content_data)
+        js_content = self._generate_js_template()
+        
         html_parts = ['<!DOCTYPE html>', '<html lang="es">', '<head>']
         html_parts.append('<meta charset="UTF-8">')
         html_parts.append('<meta name="viewport" content="width=device-width, initial-scale=1.0">')
         html_parts.append('<title>Plantilla de Hoja de Cálculo</title>')
-        html_parts.append('<link rel="stylesheet" href="styles.css">')
-        html_parts.append('</head>', '<body>')
+        
+        # Embeber CSS
+        html_parts.append('<style>')
+        html_parts.append(css_content)
+        html_parts.append('</style>')
+        
+        html_parts.extend(['</head>', '<body>'])
         
         # Generar cada hoja como una tabla
         for sheet in content_data['sheets']:
@@ -327,19 +352,33 @@ class DocumentParserService:
             html_parts.append(self._sheet_to_html_table(sheet))
             html_parts.append('</div>')
         
-        html_parts.extend(['<script src="script.js"></script>', '</body>', '</html>'])
+        # Embeber JavaScript
+        html_parts.append('<script>')
+        html_parts.append(js_content)
+        html_parts.append('</script>')
+        
+        html_parts.extend(['</body>', '</html>'])
         
         return '\n'.join(html_parts)
     
     def _generate_html_from_pdf(self, content_data: Dict) -> str:
         """
-        Genera HTML básico a partir de datos extraídos de PDF
+        Genera HTML completo con CSS y JS embebidos a partir de datos extraídos de PDF
         """
+        # Generar CSS y JS embebidos
+        css_content = self._generate_css_from_pdf()
+        js_content = self._generate_js_template()
+        
         html_parts = ['<!DOCTYPE html>', '<html lang="es">', '<head>']
         html_parts.append('<meta charset="UTF-8">')
         html_parts.append('<meta name="viewport" content="width=device-width, initial-scale=1.0">')
         html_parts.append('<title>Plantilla de PDF</title>')
-        html_parts.append('<link rel="stylesheet" href="styles.css">')
+        
+        # Embeber CSS
+        html_parts.append('<style>')
+        html_parts.append(css_content)
+        html_parts.append('</style>')
+        
         html_parts.extend(['</head>', '<body>', '<div class="pdf-container">'])
         
         # Generar cada página
@@ -350,7 +389,14 @@ class DocumentParserService:
             html_parts.append(text_with_placeholders)
             html_parts.append('</div>')
         
-        html_parts.extend(['</div>', '<script src="script.js"></script>', '</body>', '</html>'])
+        html_parts.append('</div>')
+        
+        # Embeber JavaScript
+        html_parts.append('<script>')
+        html_parts.append(js_content)
+        html_parts.append('</script>')
+        
+        html_parts.extend(['</body>', '</html>'])
         
         return '\n'.join(html_parts)
     
@@ -380,7 +426,7 @@ class DocumentParserService:
             '.document-table td, .document-table th { border: 1px solid #000; padding: 8px; vertical-align: top; }',
             '',
             '/* Placeholders */',
-            '.placeholder { background-color: #fff2cc; border: 1px dashed #d6b656; padding: 2px 4px; border-radius: 3px; }',
+            '.placeholder { color: #ff0000; font-weight: normal; }',
             '.placeholder:hover { background-color: #ffe599; }'
         ]
         
@@ -408,7 +454,7 @@ class DocumentParserService:
             '.cell-right { text-align: right; }',
             '',
             '/* Placeholders */',
-            '.placeholder { background-color: #fff2cc; border: 1px dashed #d6b656; padding: 2px 4px; border-radius: 3px; }',
+            '.placeholder { color: #ff0000; font-weight: normal; }',
             '.placeholder:hover { background-color: #ffe599; }'
         ]
         
@@ -426,7 +472,7 @@ class DocumentParserService:
             '.pdf-page p { margin-bottom: 12px; }',
             '',
             '/* Placeholders */',
-            '.placeholder { background-color: #fff2cc; border: 1px dashed #d6b656; padding: 2px 4px; border-radius: 3px; }',
+            '.placeholder { color: #ff0000; font-weight: normal; }',
             '.placeholder:hover { background-color: #ffe599; }'
         ]
         

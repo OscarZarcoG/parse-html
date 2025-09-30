@@ -419,7 +419,7 @@ def generate_test_data_for_placeholders(placeholders_data):
 @login_required
 def export_template_files(request, document_id):
     """
-    Exporta los archivos HTML, CSS y JS de una plantilla
+    Exporta un solo archivo HTML completo con CSS y JS embebidos
     """
     document = get_object_or_404(Document, id=document_id, uploaded_by=request.user)
     
@@ -429,36 +429,31 @@ def export_template_files(request, document_id):
         messages.error(request, 'El documento no ha sido procesado.')
         return redirect('parser:document_detail', document_id=document.id)
     
-    # Crear archivos temporales
-    import tempfile
-    import zipfile
-    
     try:
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.zip') as temp_zip:
-            with zipfile.ZipFile(temp_zip, 'w') as zip_file:
-                # Agregar HTML
-                zip_file.writestr('index.html', parsed_content.style_info.get('html_content', ''))
-                # Agregar CSS
-                zip_file.writestr('styles.css', parsed_content.style_info.get('css_content', ''))
-                # Agregar JS
-                zip_file.writestr('script.js', parsed_content.style_info.get('js_content', ''))
-                
-                # Agregar archivo de información de placeholders
-                placeholders_info = json.dumps(parsed_content.placeholders_detected, indent=2, ensure_ascii=False)
-                zip_file.writestr('placeholders.json', placeholders_info)
+        # Obtener el HTML completo con CSS y JS embebidos
+        html_content = parsed_content.style_info.get('html_content', '')
+        
+        # Si el HTML no tiene CSS y JS embebidos, regenerarlo
+        if '<style>' not in html_content or '<script>' not in html_content:
+            # Regenerar el HTML con CSS y JS embebidos usando el servicio
+            content_data = {
+                'paragraphs': parsed_content.content_data.get('paragraphs', []),
+                'tables': parsed_content.content_data.get('tables', []),
+                'sheets': parsed_content.content_data.get('sheets', []),
+                'pages': parsed_content.content_data.get('pages', [])
+            }
             
-            # Leer el archivo zip
-            temp_zip.seek(0)
-            with open(temp_zip.name, 'rb') as f:
-                zip_content = f.read()
-            
-            # Eliminar archivo temporal
-            os.unlink(temp_zip.name)
-            
-            # Retornar como descarga
-            response = HttpResponse(zip_content, content_type='application/zip')
-            response['Content-Disposition'] = f'attachment; filename="plantilla_{document.name}.zip"'
-            return response
+            if document.document_type == 'docx':
+                html_content = document_parser._generate_html_from_docx(content_data)
+            elif document.document_type in ['xlsx', 'xls']:
+                html_content = document_parser._generate_html_from_excel(content_data)
+            elif document.document_type == 'pdf':
+                html_content = document_parser._generate_html_from_pdf(content_data)
+        
+        # Retornar como descarga de archivo HTML único
+        response = HttpResponse(html_content, content_type='text/html; charset=utf-8')
+        response['Content-Disposition'] = f'attachment; filename="plantilla_{document.name}.html"'
+        return response
     
     except Exception as e:
         messages.error(request, f'Error al exportar: {str(e)}')

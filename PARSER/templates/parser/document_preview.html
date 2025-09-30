@@ -85,9 +85,14 @@
     .content-section {
         background: white;
         border-radius: 15px;
-        padding: 30px;
+        padding: 20px;
         box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
         margin-bottom: 30px;
+    }
+    
+    .content-section.preview-section {
+        padding: 15px;
+        border-radius: 8px;
     }
     
     .section-title {
@@ -101,28 +106,33 @@
     }
     
     .preview-container {
-        border: 2px solid #e9ecef;
-        border-radius: 12px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
         overflow: hidden;
         margin-bottom: 20px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        background: white;
     }
     
     .preview-toolbar {
-        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-        padding: 12px 20px;
+        background: #f8f9fa;
+        padding: 8px 15px;
         border-bottom: 1px solid #dee2e6;
         display: flex;
         justify-content: space-between;
         align-items: center;
+        font-size: 0.85rem;
     }
     
     .preview-content {
-        padding: 30px;
+        padding: 0;
         min-height: 400px;
-        max-height: 600px;
-        overflow-y: auto;
+        max-height: none;
+        overflow: visible;
         background: #ffffff;
+        /* Simular formato de hoja de papel */
+        margin: 0;
+        box-shadow: none;
     }
 
     .preview-content::-webkit-scrollbar {
@@ -442,7 +452,7 @@
             </div>
 
             <!-- Vista Previa del Contenido -->
-            <div class="content-section">
+            <div class="content-section preview-section">
                 <h4 class="section-title">
                     <i class="fas fa-eye"></i>
                     Vista Previa del Contenido
